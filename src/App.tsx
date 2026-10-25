@@ -27,7 +27,7 @@ import { MemberProfile } from './components/member/MemberProfile';
 import { WelfareRules } from './components/member/WelfareRules';
 
 export const App: React.FC = () => {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
   const [currentUser, setCurrentUser] = useState<UserAccount>(StorageService.getCurrentUser());
   const [settings, setSettings] = useState<OrganizationSettings>(StorageService.getSettings());
   const [activePortal, setActivePortal] = useState<'admin' | 'member'>('admin');

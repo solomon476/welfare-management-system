@@ -42,8 +42,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
       {/* Welcome Banner */}
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.5) 0%, rgba(15, 23, 42, 0.8) 100%)',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
+          background: 'linear-gradient(135deg, #007a3d 0%, #004d25 100%)',
+          border: '2px solid #c59b27',
           borderRadius: 'var(--radius-lg)',
           padding: '24px 28px',
           marginBottom: '26px',
@@ -51,12 +51,13 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '16px'
+          gap: '16px',
+          boxShadow: '0 4px 16px rgba(0, 122, 61, 0.2)'
         }}
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="code-badge" style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.8rem' }}>
+            <span className="code-badge" style={{ background: '#c59b27', color: '#fff', border: '1px solid #ffd700', fontSize: '0.8rem', fontWeight: 800 }}>
               {member.membershipNumber}
             </span>
             <span className={`status-pill pill-${member.status}`}>
@@ -86,14 +87,14 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
 
       {/* Member KPIs */}
       <div className="metrics-grid">
-        <div className="metric-card" style={{ '--accent-color': '#10b981' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#007a3d' } as any}>
           <div className="metric-header">
             <span className="metric-title">Verified In Treasury</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(16, 185, 129, 0.12)', '--metric-color': '#10b981' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(0, 122, 61, 0.12)', '--metric-color': '#007a3d' } as any}>
               <CheckCircle2 size={18} />
             </div>
           </div>
-          <div className="metric-value">
+          <div className="metric-value" style={{ color: '#007a3d' }}>
             <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '4px' }}>
               {settings.currency}
             </span>
@@ -104,14 +105,14 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
           </div>
         </div>
 
-        <div className="metric-card" style={{ '--accent-color': '#f59e0b' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#c59b27' } as any}>
           <div className="metric-header">
             <span className="metric-title">Pending Verification</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(245, 158, 11, 0.12)', '--metric-color': '#f59e0b' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(197, 155, 39, 0.12)', '--metric-color': '#c59b27' } as any}>
               <Clock size={18} />
             </div>
           </div>
-          <div className="metric-value" style={{ color: '#fbbf24' }}>
+          <div className="metric-value" style={{ color: '#7a5800' }}>
             <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '4px' }}>
               {settings.currency}
             </span>
@@ -122,10 +123,10 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
           </div>
         </div>
 
-        <div className="metric-card" style={{ '--accent-color': '#3b82f6' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#007a3d' } as any}>
           <div className="metric-header">
             <span className="metric-title">Monthly Commitment</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(59, 130, 246, 0.12)', '--metric-color': '#3b82f6' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(0, 122, 61, 0.12)', '--metric-color': '#007a3d' } as any}>
               <CreditCard size={18} />
             </div>
           </div>
@@ -136,14 +137,14 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
             {balance.monthlyDuesRate.toLocaleString()}
           </div>
           <div className="metric-subtext">
-            <span style={{ color: 'var(--success)' }}>Account in Good Standing</span>
+            <span style={{ color: '#007a3d', fontWeight: 700 }}>● Account in Good Standing</span>
           </div>
         </div>
 
-        <div className="metric-card" style={{ '--accent-color': '#8b5cf6' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#c59b27' } as any}>
           <div className="metric-header">
             <span className="metric-title">Welfare Applications</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(139, 92, 246, 0.12)', '--metric-color': '#8b5cf6' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(197, 155, 39, 0.12)', '--metric-color': '#c59b27' } as any}>
               <HeartHandshake size={18} />
             </div>
           </div>

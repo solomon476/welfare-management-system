@@ -146,50 +146,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Metrics Grid */}
       <div className="metrics-grid">
-        <div className="metric-card" style={{ '--accent-color': '#3b82f6' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#c59b27' } as any}>
           <div className="metric-header">
             <span className="metric-title">Treasury Reserve</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(59, 130, 246, 0.12)', '--metric-color': '#3b82f6' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(197, 155, 39, 0.12)', '--metric-color': '#c59b27' } as any}>
               <Landmark size={18} />
             </div>
           </div>
-          <div className="metric-value" style={{ color: stats.operationalBalance >= 0 ? 'var(--primary)' : 'var(--danger)' }}>
+          <div className="metric-value" style={{ color: '#0c1c14' }}>
             <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '4px' }}>
               {settings.currency}
             </span>
             {stats.operationalBalance.toLocaleString()}
           </div>
           <div className="metric-subtext">
-            <span>Reconciled internal treasury balance</span>
+            <span style={{ color: '#785900', fontWeight: 700 }}>● Reconciled Treasury Reserve</span>
           </div>
         </div>
 
-        <div className="metric-card" style={{ '--accent-color': '#10b981' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#007a3d' } as any}>
           <div className="metric-header">
             <span className="metric-title">Verified Inflow</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(16, 185, 129, 0.12)', '--metric-color': '#10b981' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(0, 122, 61, 0.12)', '--metric-color': '#007a3d' } as any}>
               <CheckCircle2 size={18} />
             </div>
           </div>
-          <div className="metric-value">
+          <div className="metric-value" style={{ color: '#007a3d' }}>
             <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '4px' }}>
               {settings.currency}
             </span>
             {stats.totalVerifiedIncome.toLocaleString()}
           </div>
           <div className="metric-subtext">
-            <span style={{ color: 'var(--success)' }}>Reconciled external member dues</span>
+            <span style={{ color: '#007a3d', fontWeight: 700 }}>● Reconciled external member dues</span>
           </div>
         </div>
 
-        <div className="metric-card" style={{ '--accent-color': '#f59e0b' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#b8860b' } as any}>
           <div className="metric-header">
             <span className="metric-title">Pending Verification</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(245, 158, 11, 0.12)', '--metric-color': '#f59e0b' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(184, 134, 11, 0.12)', '--metric-color': '#b8860b' } as any}>
               <Clock size={18} />
             </div>
           </div>
-          <div className="metric-value" style={{ color: '#fbbf24' }}>
+          <div className="metric-value" style={{ color: '#7a5800' }}>
             <span style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '4px' }}>
               {settings.currency}
             </span>
@@ -198,17 +198,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <div className="metric-subtext">
             <button
               onClick={() => onNavigate('contributions')}
-              style={{ background: 'none', border: 'none', color: '#fbbf24', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.78rem' }}
+              style={{ background: 'none', border: 'none', color: '#7a5800', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer', fontSize: '0.78rem' }}
             >
               Verify recorded receipts →
             </button>
           </div>
         </div>
 
-        <div className="metric-card" style={{ '--accent-color': '#8b5cf6' } as any}>
+        <div className="metric-card" style={{ '--accent-color': '#007a3d' } as any}>
           <div className="metric-header">
             <span className="metric-title">Welfare Disbursed</span>
-            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(139, 92, 246, 0.12)', '--metric-color': '#8b5cf6' } as any}>
+            <div className="metric-icon-box" style={{ '--metric-bg': 'rgba(0, 122, 61, 0.12)', '--metric-color': '#007a3d' } as any}>
               <HeartHandshake size={18} />
             </div>
           </div>
