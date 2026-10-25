@@ -1,0 +1,502 @@
+import json
+import os
+from datetime import datetime, date
+from typing import Dict, Any, List, Optional
+from ..models.schemas import (
+    MemberResponse, ContributionResponse, WelfareRequestResponse,
+    FinancialTransactionResponse, UserAccountSchema, AuditLogSchema,
+    OrgSettingsSchema, SystemStatsSchema
+)
+
+DATA_FILE = os.getenv("WMS_DATA_FILE", "wms_database.json")
+
+# In-memory database with automated JSON file persistence (zero-setup, works on any Python host like Render, Railway, Fly.io, or AWS)
+class DatabaseStore:
+    def __init__(self):
+        self.members: List[Dict[str, Any]] = []
+        self.contributions: List[Dict[str, Any]] = []
+        self.welfare_requests: List[Dict[str, Any]] = []
+        self.transactions: List[Dict[str, Any]] = []
+        self.users: List[Dict[str, Any]] = []
+        self.audit_logs: List[Dict[str, Any]] = []
+        self.settings: Dict[str, Any] = {}
+        self.load()
+
+    def load(self):
+        if os.path.exists(DATA_FILE):
+            try:
+                with open(DATA_FILE, "r") as f:
+                    data = json.load(f)
+                    self.members = data.get("members", [])
+                    self.contributions = data.get("contributions", [])
+                    self.welfare_requests = data.get("welfare_requests", [])
+                    self.transactions = data.get("transactions", [])
+                    self.users = data.get("users", [])
+                    self.audit_logs = data.get("audit_logs", [])
+                    self.settings = data.get("settings", {})
+                    return
+            except Exception as e:
+                print(f"Error reading {DATA_FILE}: {e}")
+
+        # Seed initial data if file does not exist
+        self.seed_defaults()
+        self.save()
+
+    def save(self):
+        try:
+            with open(DATA_FILE, "w") as f:
+                json.dump({
+                    "members": self.members,
+                    "contributions": self.contributions,
+                    "welfare_requests": self.welfare_requests,
+                    "transactions": self.transactions,
+                    "users": self.users,
+                    "audit_logs": self.audit_logs,
+                    "settings": self.settings
+                }, f, indent=2, default=str)
+        except Exception as e:
+            print(f"Error saving database to {DATA_FILE}: {e}")
+
+    def seed_defaults(self):
+        self.settings = {
+            "org_name": "Solian Wolves Welfare Association",
+            "tagline": "Supporting One Another Through Every Season of Life",
+            "registration_number": "WMS/NBI/2023/0488",
+            "currency": "KES",
+            "monthly_dues_amount": 1500.0,
+            "welfare_registration_fee": 2000.0,
+            "fiscal_year_start": "01-01",
+            "opening_reserve_balance": 200000.0,
+            "max_bereavement_benefit": 50000.0,
+            "max_medical_benefit": 35000.0,
+            "max_education_benefit": 25000.0,
+            "approval_quorum": 2,
+            "contact_email": "welfare@solianwolves.org",
+            "contact_phone": "+254 722 000 123",
+            "address": "Solian Wolves Towers, 4th Floor, Ralph Bunche Rd, Nairobi, Kenya",
+            "is_demo_mode": True
+        }
+
+        self.users = [
+            {
+                "id": "USR-001",
+                "name": "Sarah Koech",
+                "email": "admin@solianwolves.org",
+                "role": "admin",
+                "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+                "department": "Executive Administration",
+                "is_active": True,
+                "last_login": "2026-10-25 09:30"
+            },
+            {
+                "id": "USR-002",
+                "name": "David Mwangi",
+                "email": "welfare@solianwolves.org",
+                "role": "welfare_officer",
+                "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+                "department": "Welfare & Member Care",
+                "is_active": True,
+                "last_login": "2026-10-25 11:15"
+            },
+            {
+                "id": "USR-003",
+                "name": "Grace Achieng",
+                "email": "finance@solianwolves.org",
+                "role": "finance_officer",
+                "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+                "department": "Treasury & Finance",
+                "is_active": True,
+                "last_login": "2026-10-25 14:02"
+            },
+            {
+                "id": "USR-004",
+                "name": "Dr. Benson Otieno",
+                "email": "approvals@solianwolves.org",
+                "role": "approver",
+                "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+                "department": "Welfare Advisory Board",
+                "is_active": True,
+                "last_login": "2026-10-24 16:45"
+            },
+            {
+                "id": "USR-005",
+                "name": "John Kiprono",
+                "email": "john.kiprono@example.com",
+                "role": "member",
+                "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+                "linked_member_id": "SW-M001",
+                "department": "General Membership",
+                "is_active": True,
+                "last_login": "2026-10-25 08:20"
+            }
+        ]
+
+        self.members = [
+            {
+                "id": "SW-M001",
+                "membership_number": "SW-2024-001",
+                "full_name": "John Kiprono",
+                "national_id": "28472910",
+                "phone": "+254 712 345 678",
+                "email": "john.kiprono@example.com",
+                "category": "full_member",
+                "status": "active",
+                "date_joined": "2024-01-15",
+                "monthly_commitment": 1500.0,
+                "next_of_kin": {
+                    "name": "Beatrice Chebet",
+                    "relationship": "Spouse",
+                    "phone": "+254 723 998 877",
+                    "email": "beatrice.c@example.com"
+                },
+                "notes": "Founding member. Regular monthly contributor."
+            },
+            {
+                "id": "SW-M002",
+                "membership_number": "SW-2024-002",
+                "full_name": "Esther Wanjiku Ndung'u",
+                "national_id": "31908472",
+                "phone": "+254 721 556 789",
+                "email": "esther.wanjiku@example.com",
+                "category": "full_member",
+                "status": "active",
+                "date_joined": "2024-02-01",
+                "monthly_commitment": 1500.0,
+                "next_of_kin": {
+                    "name": "Peter Ndung'u",
+                    "relationship": "Brother",
+                    "phone": "+254 710 443 322"
+                },
+                "notes": "Member in good standing."
+            },
+            {
+                "id": "SW-M003",
+                "membership_number": "SW-2024-003",
+                "full_name": "Hassan Mohammed Ali",
+                "national_id": "29871145",
+                "phone": "+254 733 889 900",
+                "email": "hassan.ali@example.com",
+                "category": "full_member",
+                "status": "active",
+                "date_joined": "2024-03-10",
+                "monthly_commitment": 1500.0,
+                "next_of_kin": {
+                    "name": "Fatuma Hassan",
+                    "relationship": "Spouse",
+                    "phone": "+254 735 112 233"
+                },
+                "notes": "Direct bank standing order."
+            },
+            {
+                "id": "SW-M004",
+                "membership_number": "SW-2024-004",
+                "full_name": "Mercy Akinyi Omondi",
+                "national_id": "33491028",
+                "phone": "+254 705 678 123",
+                "email": "mercy.akinyi@example.com",
+                "category": "associate",
+                "status": "active",
+                "date_joined": "2024-06-20",
+                "monthly_commitment": 1000.0,
+                "next_of_kin": {
+                    "name": "George Omondi",
+                    "relationship": "Father",
+                    "phone": "+254 722 778 899"
+                },
+                "notes": "Associate tier."
+            },
+            {
+                "id": "SW-M005",
+                "membership_number": "SW-2024-005",
+                "full_name": "Samuel Kiprotich Kemboi",
+                "national_id": "25619384",
+                "phone": "+254 718 901 234",
+                "email": "samuel.kemboi@example.com",
+                "category": "senior",
+                "status": "active",
+                "date_joined": "2024-01-10",
+                "monthly_commitment": 1500.0,
+                "next_of_kin": {
+                    "name": "Joyce Chepkemoi",
+                    "relationship": "Daughter",
+                    "phone": "+254 728 665 544"
+                },
+                "notes": "Senior advisory member."
+            }
+        ]
+
+        self.contributions = [
+            {
+                "id": "CON-001",
+                "member_id": "SW-M001",
+                "member_name": "John Kiprono",
+                "membership_number": "SW-2024-001",
+                "amount": 1500.0,
+                "payment_date": "2026-10-05",
+                "category": "monthly_dues",
+                "payment_method": "mpesa",
+                "reference_number": "SKJ928410L",
+                "status": "verified",
+                "recorded_by": "David Mwangi",
+                "recorded_at": "2026-10-05T10:14:00Z",
+                "verified_by": "Grace Achieng",
+                "verified_at": "2026-10-06T09:30:00Z",
+                "notes": "October regular dues"
+            },
+            {
+                "id": "CON-002",
+                "member_id": "SW-M001",
+                "member_name": "John Kiprono",
+                "membership_number": "SW-2024-001",
+                "amount": 2000.0,
+                "payment_date": "2026-09-12",
+                "category": "benevolent_levy",
+                "payment_method": "mpesa",
+                "reference_number": "SIH782190B",
+                "status": "verified",
+                "recorded_by": "Grace Achieng",
+                "recorded_at": "2026-09-12T14:20:00Z",
+                "verified_by": "Grace Achieng",
+                "verified_at": "2026-09-13T11:00:00Z",
+                "notes": "Bereavement special levy"
+            },
+            {
+                "id": "CON-004",
+                "member_id": "SW-M002",
+                "member_name": "Esther Wanjiku Ndung'u",
+                "membership_number": "SW-2024-002",
+                "amount": 3000.0,
+                "payment_date": "2026-10-18",
+                "category": "monthly_dues",
+                "payment_method": "bank_transfer",
+                "reference_number": "EBB-TRX-20261018-09",
+                "status": "recorded",
+                "recorded_by": "David Mwangi",
+                "recorded_at": "2026-10-18T16:00:00Z",
+                "notes": "Awaiting bank statement reconciliation."
+            },
+            {
+                "id": "CON-005",
+                "member_id": "SW-M003",
+                "member_name": "Hassan Mohammed Ali",
+                "membership_number": "SW-2024-003",
+                "amount": 4500.0,
+                "payment_date": "2026-10-10",
+                "category": "monthly_dues",
+                "payment_method": "bank_transfer",
+                "reference_number": "STANBIC-44892019",
+                "status": "verified",
+                "recorded_by": "Grace Achieng",
+                "recorded_at": "2026-10-10T11:00:00Z",
+                "verified_by": "Grace Achieng",
+                "verified_at": "2026-10-11T10:00:00Z",
+                "notes": "Quarter 4 dues in advance"
+            },
+            {
+                "id": "CON-007",
+                "member_id": "SW-M005",
+                "member_name": "Samuel Kiprotich Kemboi",
+                "membership_number": "SW-2024-005",
+                "amount": 5000.0,
+                "payment_date": "2026-10-01",
+                "category": "emergency_fund",
+                "payment_method": "cash",
+                "reference_number": "RCT-2026-0041",
+                "status": "verified",
+                "recorded_by": "Grace Achieng",
+                "recorded_at": "2026-10-01T15:00:00Z",
+                "verified_by": "Grace Achieng",
+                "verified_at": "2026-10-01T15:30:00Z",
+                "notes": "Voluntary emergency fund contribution"
+            }
+        ]
+
+        self.welfare_requests = [
+            {
+                "id": "WEL-2026-001",
+                "member_id": "SW-M001",
+                "member_name": "John Kiprono",
+                "membership_number": "SW-2024-001",
+                "category": "medical",
+                "urgency": "urgent",
+                "amount_requested": 35000.0,
+                "amount_approved": 30000.0,
+                "status": "approved",
+                "submission_date": "2026-10-12",
+                "description": "Emergency hospitalization and surgery co-pay for spouse (Beatrice Chebet) at Nairobi West Hospital.",
+                "bank_or_mpesa_payout_details": "M-Pesa 0712345678 (John Kiprono)",
+                "documents": [
+                    {"id": "DOC-101", "name": "Hospital_Admission_NWH.pdf", "size": "1.4 MB", "uploaded_at": "2026-10-12"}
+                ],
+                "decisions": [
+                    {
+                        "id": "DEC-01",
+                        "status": "submitted",
+                        "officer_name": "John Kiprono",
+                        "officer_role": "Member",
+                        "timestamp": "2026-10-12 11:20",
+                        "notes": "Application submitted."
+                    },
+                    {
+                        "id": "DEC-02",
+                        "status": "approved",
+                        "officer_name": "Dr. Benson Otieno",
+                        "officer_role": "Approver",
+                        "timestamp": "2026-10-14 14:00",
+                        "notes": "Approved in accordance with Article 6.2 medical cap.",
+                        "amount_approved": 30000.0
+                    }
+                ]
+            },
+            {
+                "id": "WEL-2026-002",
+                "member_id": "SW-M004",
+                "member_name": "Mercy Akinyi Omondi",
+                "membership_number": "SW-2024-004",
+                "category": "bereavement",
+                "urgency": "emergency",
+                "amount_requested": 50000.0,
+                "amount_approved": 50000.0,
+                "status": "disbursed",
+                "submission_date": "2026-09-18",
+                "description": "Demise of father George Omondi. Funeral arrangements in Siaya.",
+                "disbursement_id": "TXN-2026-0089",
+                "bank_or_mpesa_payout_details": "KCB Acc 1189402910 - Mercy Akinyi",
+                "documents": [
+                    {"id": "DOC-201", "name": "Burial_Permit_Omondi_G.pdf", "size": "1.2 MB", "uploaded_at": "2026-09-18"}
+                ],
+                "decisions": [
+                    {
+                        "id": "DEC-11",
+                        "status": "approved",
+                        "officer_name": "Sarah Koech",
+                        "officer_role": "Administrator",
+                        "timestamp": "2026-09-19 09:00",
+                        "notes": "Approved for full KES 50,000 cap.",
+                        "amount_approved": 50000.0
+                    },
+                    {
+                        "id": "DEC-12",
+                        "status": "disbursed",
+                        "officer_name": "Grace Achieng",
+                        "officer_role": "Finance Officer",
+                        "timestamp": "2026-09-19 14:30",
+                        "notes": "Disbursed via EFT TXN-2026-0089."
+                    }
+                ]
+            }
+        ]
+
+        self.transactions = [
+            {
+                "id": "TXN-2026-0085",
+                "date": "2026-10-01",
+                "type": "income",
+                "category": "Voluntary Emergency Levy",
+                "amount": 5000.0,
+                "description": "Emergency reserve top-up - Samuel Kemboi",
+                "reference": "RCT-2026-0041",
+                "payment_mode": "cash",
+                "linked_member_id": "SW-M005",
+                "recorded_by": "Grace Achieng",
+                "is_reconciled": True
+            },
+            {
+                "id": "TXN-2026-0086",
+                "date": "2026-10-05",
+                "type": "income",
+                "category": "Member Monthly Dues",
+                "amount": 1500.0,
+                "description": "October dues - John Kiprono",
+                "reference": "SKJ928410L",
+                "payment_mode": "mpesa",
+                "linked_member_id": "SW-M001",
+                "recorded_by": "David Mwangi",
+                "is_reconciled": True
+            },
+            {
+                "id": "TXN-2026-0087",
+                "date": "2026-10-10",
+                "type": "income",
+                "category": "Member Monthly Dues",
+                "amount": 4500.0,
+                "description": "Q4 advance dues - Hassan Ali",
+                "reference": "STANBIC-44892019",
+                "payment_mode": "bank_transfer",
+                "linked_member_id": "SW-M003",
+                "recorded_by": "Grace Achieng",
+                "is_reconciled": True
+            },
+            {
+                "id": "TXN-2026-0088",
+                "date": "2026-10-15",
+                "type": "expenditure",
+                "category": "Administrative Operations",
+                "amount": 3500.0,
+                "description": "Registry filing & bank charge fees",
+                "reference": "CHQ-00192",
+                "payment_mode": "cheque",
+                "recorded_by": "Grace Achieng",
+                "is_reconciled": True
+            },
+            {
+                "id": "TXN-2026-0089",
+                "date": "2026-09-19",
+                "type": "expenditure",
+                "category": "Welfare Assistance Payout",
+                "amount": 50000.0,
+                "description": "Bereavement assistance for late George Omondi (Mercy Akinyi)",
+                "reference": "EFT-889102-KCB",
+                "payment_mode": "bank_transfer",
+                "linked_member_id": "SW-M004",
+                "linked_welfare_request_id": "WEL-2026-002",
+                "recorded_by": "Grace Achieng",
+                "is_reconciled": True
+            }
+        ]
+
+        self.audit_logs = [
+            {
+                "id": "AUD-001",
+                "timestamp": "2026-10-25 11:15",
+                "user_id": "USR-002",
+                "user_name": "David Mwangi",
+                "user_role": "welfare_officer",
+                "action": "MEMBER_VIEW",
+                "entity_type": "member",
+                "entity_id": "SW-M001",
+                "description": "Viewed member profile for John Kiprono"
+            },
+            {
+                "id": "AUD-002",
+                "timestamp": "2026-10-24 14:00",
+                "user_id": "USR-004",
+                "user_name": "Dr. Benson Otieno",
+                "user_role": "approver",
+                "action": "WELFARE_APPROVE",
+                "entity_type": "welfare_request",
+                "entity_id": "WEL-2026-001",
+                "description": "Approved assistance of KES 30,000 for claim WEL-2026-001",
+                "previous_value": "Status: under_review",
+                "new_value": "Status: approved"
+            }
+        ]
+
+    def add_audit_log(self, user_name: str, user_role: str, action: str, entity_type: str, entity_id: str, description: str, prev_val: Optional[str] = None, new_val: Optional[str] = None):
+        log_entry = {
+            "id": f"AUD-{int(datetime.now().timestamp() * 1000)}",
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "user_id": "SYS",
+            "user_name": user_name,
+            "user_role": user_role,
+            "action": action,
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "description": description,
+            "previous_value": prev_val,
+            "new_value": new_val
+        }
+        self.audit_logs.insert(0, log_entry)
+        self.save()
+
+db = DatabaseStore()
