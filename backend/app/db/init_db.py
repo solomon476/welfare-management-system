@@ -1,0 +1,163 @@
+from sqlalchemy.orm import Session
+from datetime import date, datetime
+from decimal import Decimal
+
+from ..models.orm import User, Member, Contribution, WelfareRequest, WelfareDecision, FinancialLedgerEntry, OrganizationSettings, AuditLog
+from ..core.security import hash_password
+from ..core.config import settings
+
+def init_db(db: Session):
+    # 1. Organization Settings
+    existing_settings = db.query(OrganizationSettings).first()
+    if not existing_settings:
+        org_settings = OrganizationSettings(
+            id=1,
+            org_name="Solian Wolves Welfare Association",
+            tagline="Empowering Members Through Solidarity",
+            registration_number="WLF/2026/0892",
+            currency="KES",
+            monthly_dues_amount=Decimal("1500.00"),
+            welfare_registration_fee=Decimal("2000.00"),
+            opening_reserve_balance=settings.DEFAULT_OPENING_RESERVE,
+            max_bereavement_benefit=Decimal("50000.00"),
+            max_medical_benefit=Decimal("35000.00"),
+            max_education_benefit=Decimal("25000.00"),
+            approval_quorum=settings.APPROVAL_QUORUM,
+            contact_email="admin@solianwolves.org",
+            contact_phone="+254 711 234 567",
+            address="Wolves Plaza, 4th Floor, Upper Hill, Nairobi",
+            is_demo_mode=True
+        )
+        db.add(org_settings)
+
+    # 2. Users
+    if db.query(User).count() == 0:
+        users = [
+            User(
+                id="USR-001",
+                name="Sarah Wanjiku",
+                email="admin@solianwolves.org",
+                hashed_password=hash_password("admin123"),
+                role="admin",
+                avatar="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+                department="Executive Committee",
+                is_active=True
+            ),
+            User(
+                id="USR-002",
+                name="David Mwangi",
+                email="welfare@solianwolves.org",
+                hashed_password=hash_password("welfare123"),
+                role="welfare_officer",
+                avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+                department="Welfare Directorate",
+                is_active=True
+            ),
+            User(
+                id="USR-003",
+                name="Grace Achieng",
+                email="finance@solianwolves.org",
+                hashed_password=hash_password("finance123"),
+                role="finance_officer",
+                avatar="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+                department="Treasury & Finance",
+                is_active=True
+            ),
+            User(
+                id="USR-004",
+                name="Dr. Benson Otieno",
+                email="approver@solianwolves.org",
+                hashed_password=hash_password("approver123"),
+                role="approver",
+                avatar="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+                department="Board of Trustees",
+                is_active=True
+            ),
+            User(
+                id="USR-005",
+                name="John Kiprono",
+                email="member@solianwolves.org",
+                hashed_password=hash_password("member123"),
+                role="member",
+                avatar="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+                linked_member_id="SW-M001",
+                department="General Assembly",
+                is_active=True
+            )
+        ]
+        for u in users:
+            db.add(u)
+
+    # 3. Members
+    if db.query(Member).count() == 0:
+        members = [
+            Member(
+                id="SW-M001",
+                membership_number="SW-2026-001",
+                full_name="John Kiprono",
+                national_id="28475912",
+                phone="+254 722 100 200",
+                email="member@solianwolves.org",
+                category="full_member",
+                status="active",
+                date_joined=date(2024, 1, 15),
+                monthly_commitment=Decimal("1500.00"),
+                next_of_kin_name="Mercy Kiprono",
+                next_of_kin_relationship="Spouse",
+                next_of_kin_phone="+254 722 100 201",
+                avatar_url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+            ),
+            Member(
+                id="SW-M002",
+                membership_number="SW-2026-002",
+                full_name="Mary Njeri",
+                national_id="31902844",
+                phone="+254 733 400 500",
+                email="mary.njeri@example.com",
+                category="full_member",
+                status="active",
+                date_joined=date(2024, 2, 1),
+                monthly_commitment=Decimal("1500.00"),
+                next_of_kin_name="Samuel Njeri",
+                next_of_kin_relationship="Brother",
+                next_of_kin_phone="+254 733 400 501",
+                avatar_url="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80"
+            ),
+            Member(
+                id="SW-M003",
+                membership_number="SW-2026-003",
+                full_name="Peter Ochieng",
+                national_id="25671903",
+                phone="+254 710 600 700",
+                email="peter.ochieng@example.com",
+                category="senior",
+                status="active",
+                date_joined=date(2023, 11, 10),
+                monthly_commitment=Decimal("2000.00"),
+                next_of_kin_name="Amina Ochieng",
+                next_of_kin_relationship="Spouse",
+                next_of_kin_phone="+254 710 600 701",
+                avatar_url="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80"
+            )
+        ]
+        for m in members:
+            db.add(m)
+
+    # 4. Opening Sinking Reserve Transaction in Ledger
+    if db.query(FinancialLedgerEntry).count() == 0:
+        ledger_init = FinancialLedgerEntry(
+            id="TXN-INIT-001",
+            date=date(2026, 1, 1),
+            type="income",
+            category="Opening Reserve Fund",
+            amount=settings.DEFAULT_OPENING_RESERVE,
+            description="Board-authorized capital sinking reserve allocation",
+            reference="RES-2026-ALLOC",
+            payment_mode="bank_transfer",
+            recorded_by="Sarah Wanjiku",
+            is_reconciled=True,
+            reconciled_at=datetime(2026, 1, 1, 8, 0)
+        )
+        db.add(ledger_init)
+
+    db.commit()
