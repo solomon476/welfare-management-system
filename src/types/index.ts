@@ -177,6 +177,7 @@ export interface OrganizationSettings {
   monthlyDuesAmount: number;
   welfareRegistrationFee: number;
   fiscalYearStart: string;
+  openingReserveBalance: number;
   maxBereavementBenefit: number;
   maxMedicalBenefit: number;
   maxEducationBenefit: number;
@@ -184,4 +185,5 @@ export interface OrganizationSettings {
   contactEmail: string;
   contactPhone: string;
   address: string;
+  isDemoMode: boolean;
 }

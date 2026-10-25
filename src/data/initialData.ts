@@ -17,13 +17,15 @@ export const initialOrgSettings: OrganizationSettings = {
   monthlyDuesAmount: 1500,
   welfareRegistrationFee: 2000,
   fiscalYearStart: '01-01',
+  openingReserveBalance: 200000,
   maxBereavementBenefit: 50000,
   maxMedicalBenefit: 35000,
   maxEducationBenefit: 25000,
   approvalQuorum: 2,
   contactEmail: 'welfare@solianwolves.org',
   contactPhone: '+254 722 000 123',
-  address: 'Solian Wolves Towers, 4th Floor, Ralph Bunche Rd, Nairobi, Kenya'
+  address: 'Solian Wolves Towers, 4th Floor, Ralph Bunche Rd, Nairobi, Kenya',
+  isDemoMode: true
 };
 
 export const initialUserAccounts: UserAccount[] = [

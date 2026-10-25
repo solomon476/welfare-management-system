@@ -66,6 +66,15 @@ export const App: React.FC = () => {
     }
   };
 
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  const handleInitializeCleanSlate = () => {
+    if (confirm('Initialize clean production database? This will clear all sample demo records so you can start with real approved member entries.')) {
+      StorageService.initializeCleanProductionSlate();
+      window.location.reload();
+    }
+  };
+
   const handleResetData = () => {
     if (confirm('Reset system data to initial demonstration state? All custom records will be restored to defaults.')) {
       StorageService.resetToDefaultData();
@@ -111,6 +120,8 @@ export const App: React.FC = () => {
         pendingRequestsCount={stats.pendingRequestsCount}
         pendingContributionsCount={StorageService.getContributions().filter(c => c.status === 'recorded').length}
         setActivePortal={handleSwitchPortal}
+        isMobileNavOpen={isMobileNavOpen}
+        onCloseMobileNav={() => setIsMobileNavOpen(false)}
       />
 
       {/* Main Container */}
@@ -127,6 +138,9 @@ export const App: React.FC = () => {
           theme={theme}
           setTheme={setTheme}
           onResetData={handleResetData}
+          onInitializeCleanSlate={handleInitializeCleanSlate}
+          isMobileNavOpen={isMobileNavOpen}
+          setIsMobileNavOpen={setIsMobileNavOpen}
         />
 
         {/* Dynamic Route Content */}

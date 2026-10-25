@@ -2,12 +2,13 @@ import React from 'react';
 import {
   Bell,
   Shield,
-  UserCheck,
   RefreshCw,
   Sun,
   Moon,
-  ExternalLink,
-  ChevronDown
+  ChevronDown,
+  Menu,
+  Database,
+  Sparkles
 } from 'lucide-react';
 import { UserAccount, OrganizationSettings } from '../types';
 
@@ -22,6 +23,9 @@ interface NavbarProps {
   theme: 'dark' | 'light';
   setTheme: (theme: 'dark' | 'light') => void;
   onResetData: () => void;
+  onInitializeCleanSlate: () => void;
+  isMobileNavOpen: boolean;
+  setIsMobileNavOpen: (open: boolean) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -34,14 +38,29 @@ export const Navbar: React.FC<NavbarProps> = ({
   settings,
   theme,
   setTheme,
-  onResetData
+  onResetData,
+  onInitializeCleanSlate,
+  isMobileNavOpen,
+  setIsMobileNavOpen
 }) => {
   return (
     <header className="app-header">
       <div className="header-left">
+        {/* Mobile Hamburger Menu Toggle */}
+        <button
+          className="btn btn-ghost btn-sm mobile-menu-btn"
+          onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+          title="Toggle Navigation Menu"
+          style={{ padding: '6px' }}
+        >
+          <Menu size={20} />
+        </button>
+
         <div className="header-title-badge">
           <Shield size={14} />
-          <span>{settings.orgName}</span>
+          <span style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {settings.orgName}
+          </span>
         </div>
 
         {/* Portal Switcher Tabs */}
@@ -49,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActivePortal('admin')}
             style={{
-              padding: '5px 14px',
+              padding: '5px 12px',
               borderRadius: 'var(--radius-full)',
               border: 'none',
               fontSize: '0.78rem',
@@ -60,12 +79,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               transition: 'all 0.15s ease'
             }}
           >
-            Admin Portal
+            Admin
           </button>
           <button
             onClick={() => setActivePortal('member')}
             style={{
-              padding: '5px 14px',
+              padding: '5px 12px',
               borderRadius: 'var(--radius-full)',
               border: 'none',
               fontSize: '0.78rem',
@@ -76,22 +95,58 @@ export const Navbar: React.FC<NavbarProps> = ({
               transition: 'all 0.15s ease'
             }}
           >
-            Member Portal
+            Member
           </button>
         </div>
       </div>
 
       <div className="header-right">
-        {/* Reset Demo Data Button */}
-        <button
-          onClick={onResetData}
-          title="Reset to default demonstration records"
-          className="btn btn-ghost btn-sm"
-          style={{ gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)' }}
-        >
-          <RefreshCw size={13} />
-          <span>Reset Demo</span>
-        </button>
+        {/* Environment Badge & Mode Selector */}
+        {settings.isDemoMode ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                background: 'rgba(245, 158, 11, 0.15)',
+                color: '#fbbf24',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                padding: '3px 8px',
+                borderRadius: 'var(--radius-full)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              title="Currently viewing demonstration committee data. Can be purged anytime."
+            >
+              <Sparkles size={11} />
+              Demo Data
+            </span>
+            <button
+              onClick={onInitializeCleanSlate}
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: '0.72rem', color: 'var(--text-muted)', padding: '3px 7px' }}
+              title="Purge all demo records and switch to pristine production database (0 records)"
+            >
+              <Database size={12} />
+              <span className="hide-on-mobile">Start Blank Production</span>
+            </button>
+          </div>
+        ) : (
+          <span
+            style={{
+              fontSize: '0.68rem',
+              fontWeight: 700,
+              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#34d399',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              padding: '3px 8px',
+              borderRadius: 'var(--radius-full)'
+            }}
+          >
+            ● Production Mode (Clean Slate)
+          </span>
+        )}
 
         {/* Theme Toggle */}
         <button
@@ -146,7 +201,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             alt={currentUser.name}
             className="user-avatar"
           />
-          <div className="user-details">
+          <div className="user-details hide-on-mobile">
             <span className="user-name">{currentUser.name}</span>
             <span className="user-role-tag">
               {currentUser.role.replace('_', ' ')}

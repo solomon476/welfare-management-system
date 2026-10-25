@@ -616,12 +616,15 @@ export class StorageService {
       .filter(r => r.status === 'disbursed')
       .reduce((sum, r) => sum + (r.amountApproved || r.amountRequested), 0);
 
-    const operationalBalance = totalVerifiedIncome - totalExpenditure;
+    const settings = this.getSettings();
+    const openingReserveBalance = settings.openingReserveBalance || 200000;
+    const operationalBalance = openingReserveBalance + totalVerifiedIncome - totalExpenditure;
 
     return {
       totalMembers: members.length,
       activeMembers,
       pendingMembers,
+      openingReserveBalance,
       totalVerifiedIncome,
       totalPendingContributions,
       totalExpenditure,
@@ -630,6 +633,24 @@ export class StorageService {
       approvedRequestsCount,
       disbursedRequestsTotal
     };
+  }
+
+  // Clear all records for pristine production start
+  static initializeCleanProductionSlate(): void {
+    const settings = this.getSettings();
+    settings.isDemoMode = false;
+    setStoredItem(STORAGE_KEYS.MEMBERS, []);
+    setStoredItem(STORAGE_KEYS.CONTRIBUTIONS, []);
+    setStoredItem(STORAGE_KEYS.WELFARE_REQUESTS, []);
+    setStoredItem(STORAGE_KEYS.TRANSACTIONS, []);
+    setStoredItem(STORAGE_KEYS.NOTIFICATIONS, []);
+    setStoredItem(STORAGE_KEYS.SETTINGS, settings);
+    this.addAuditLog(
+      'INIT_CLEAN_SLATE',
+      'system_setting',
+      'SYSTEM',
+      'Purged all demo records and initialized clean production database'
+    );
   }
 
   // Reset data to defaults
