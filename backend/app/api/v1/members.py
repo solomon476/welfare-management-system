@@ -17,12 +17,16 @@ router = APIRouter(prefix="/members", tags=["Members Register"])
 def get_members(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
+    cursor: Optional[str] = Query(None, description="Keyset cursor for ultra-fast 100k member seek"),
     search: Optional[str] = None,
     status: Optional[str] = None,
     category: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(Member)
+
+    if cursor:
+        query = query.filter(Member.id < cursor)
 
     if search:
         s = f"%{search.strip()}%"
@@ -42,14 +46,17 @@ def get_members(
         query = query.filter(Member.category == category)
 
     total = query.count()
-    items = query.order_by(Member.date_joined.desc()).offset(skip).limit(limit).all()
+    items = query.order_by(Member.id.desc()).offset(0 if cursor else skip).limit(limit).all()
+    has_more = (skip + limit) < total if not cursor else len(items) == limit
+    next_cursor = items[-1].id if items and len(items) == limit else None
 
     return PaginatedResponse(
         items=items,
         total=total,
         skip=skip,
         limit=limit,
-        has_more=(skip + limit) < total
+        has_more=has_more,
+        next_cursor=next_cursor
     )
 
 @router.get("/check-duplicate")

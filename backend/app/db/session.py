@@ -17,13 +17,14 @@ if database_url.startswith("sqlite"):
         poolclass=StaticPool
     )
 else:
-    # PostgreSQL configuration with bounded connection pool for 100-1,000 simultaneous users
+    # PostgreSQL configuration with bounded connection pool scaled for 50k-100k members
     engine = create_engine(
         database_url,
         poolclass=QueuePool,
         pool_size=settings.DB_POOL_SIZE,
         max_overflow=settings.DB_MAX_OVERFLOW,
         pool_timeout=settings.DB_POOL_TIMEOUT,
+        pool_recycle=settings.DB_POOL_RECYCLE,
         pool_pre_ping=True
     )
 

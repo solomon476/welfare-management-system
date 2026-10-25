@@ -5,12 +5,20 @@ from typing import Dict, Any, List
 from ..models.orm import Contribution, FinancialLedgerEntry, OrganizationSettings, WelfareRequest
 from ..schemas.treasury import TreasuryReconciliationAuditResponse, TreasuryItem
 from ..core.config import settings
+from .cache_service import cache
 
-def get_reconciliation(db: Session) -> TreasuryReconciliationAuditResponse:
+def get_reconciliation(db: Session, force_refresh: bool = False) -> TreasuryReconciliationAuditResponse:
     """
     Calculates audited cash balance strictly from ledger entries and verified inflows.
     Guarantees fixed-precision Decimal calculations with no floating-point rounding errors.
+    Uses caching layer for 100k member scale to eliminate redundant table scans.
     """
+    cache_key = "treasury:reconciliation"
+    if not force_refresh:
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return TreasuryReconciliationAuditResponse(**cached_data)
+
     # 1. Fetch opening reserve fund
     org_settings = db.query(OrganizationSettings).first()
     opening_reserve = Decimal(str(org_settings.opening_reserve_balance)) if org_settings else settings.DEFAULT_OPENING_RESERVE
@@ -81,7 +89,7 @@ def get_reconciliation(db: Session) -> TreasuryReconciliationAuditResponse:
         TreasuryItem(label="Administrative & Bank Operational Expenses", amount=-operational_expenses, type="debit"),
     ]
 
-    return TreasuryReconciliationAuditResponse(
+    response = TreasuryReconciliationAuditResponse(
         status="RECONCILED" if is_positive else "DEFICIT_FLAGGED",
         currency=settings.CURRENCY,
         calculation_formula="Opening Reserve (KES 200,000) + Verified Inflows + Other Income - Welfare Disbursements - Operating Expenses",
@@ -99,13 +107,17 @@ def get_reconciliation(db: Session) -> TreasuryReconciliationAuditResponse:
         breakdown_items=breakdown_items
     )
 
+    # Store in high-performance cache
+    cache.set(cache_key, response.model_dump(), ttl=settings.CACHE_TTL_SECONDS)
+    return response
+
 def assert_sufficient_funds(db: Session, required_amount: Decimal) -> Decimal:
     """
     Enforces concurrency protection and double-spend prevention.
     Verifies that the organization has sufficient verified cash on hand before disbursing funds.
-    Raises ValueError if funds are insufficient.
+    Forces refresh to avoid operating on stale cache.
     """
-    reconciliation = get_reconciliation(db)
+    reconciliation = get_reconciliation(db, force_refresh=True)
     if reconciliation.reconciled_cash_balance < required_amount:
         raise ValueError(
             f"Insufficient verified treasury funds: available {settings.CURRENCY} {reconciliation.reconciled_cash_balance:,.2f}, "

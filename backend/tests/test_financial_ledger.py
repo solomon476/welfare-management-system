@@ -127,3 +127,76 @@ def test_pagination_and_member_query(client):
     assert len(data["items"]) == 2
     assert data["total"] >= 3
     assert data["has_more"] is True
+
+def test_cursor_pagination_for_100k_members(client):
+    """
+    Test 6: Keyset Cursor Pagination for 50,000–100,000 scale
+    Ensures O(1) query seeking using cursor without linear OFFSET performance degradation.
+    """
+    res1 = client.get("/api/v1/members?limit=2")
+    assert res1.status_code == 200
+    data1 = res1.json()
+    cursor = data1.get("next_cursor")
+    assert cursor is not None
+
+    # Fetch next page using cursor
+    res2 = client.get(f"/api/v1/members?limit=2&cursor={cursor}")
+    assert res2.status_code == 200
+    data2 = res2.json()
+    assert len(data2["items"]) >= 1
+    # Ensure next page does not duplicate first page
+    assert data2["items"][0]["id"] != data1["items"][0]["id"]
+
+def test_bulk_contribution_import_for_100k_members(client):
+    """
+    Test 7: High-Volume Statement Batch Import for 50k-100k Scale
+    Processes statement dumps, matches members by National ID, and skips duplicates automatically.
+    """
+    batch_payload = {
+        "batch_reference": "MPESA_BATCH_OCT_SCALE_TEST",
+        "items": [
+            {
+                "member_identifier": "28475912",  # John Kiprono's National ID
+                "amount": "1500.00",
+                "payment_date": str(date.today()),
+                "category": "monthly_dues",
+                "payment_method": "mpesa",
+                "reference_number": "BULK-PAYBILL-001"
+            },
+            {
+                "member_identifier": "31902844",  # Mary Njeri's National ID
+                "amount": "1500.00",
+                "payment_date": str(date.today()),
+                "category": "monthly_dues",
+                "payment_method": "mpesa",
+                "reference_number": "BULK-PAYBILL-002"
+            },
+            {
+                "member_identifier": "28475912",
+                "amount": "1500.00",
+                "payment_date": str(date.today()),
+                "category": "monthly_dues",
+                "payment_method": "mpesa",
+                "reference_number": "BULK-PAYBILL-001"  # Duplicate reference in same batch
+            },
+            {
+                "member_identifier": "99999999",  # Non-existent member
+                "amount": "1500.00",
+                "payment_date": str(date.today()),
+                "category": "monthly_dues",
+                "payment_method": "mpesa",
+                "reference_number": "BULK-PAYBILL-003"
+            }
+        ],
+        "auto_verify": True,
+        "recorded_by": "Finance Officer"
+    }
+
+    res = client.post("/api/v1/contributions/bulk-import", json=batch_payload)
+    assert res.status_code == 201
+    data = res.json()
+    assert data["successfully_imported"] == 2
+    assert data["duplicates_skipped"] == 1
+    assert "99999999" in data["unmatched_identifiers"]
+    assert Decimal(str(data["total_amount_recorded"])) == Decimal("3000.00")
+

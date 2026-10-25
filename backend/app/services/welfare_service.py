@@ -8,6 +8,7 @@ from ..models.orm import WelfareRequest, WelfareDecision, Disbursement, Financia
 from ..schemas.welfare import WelfareRequestCreate, WelfareStatusUpdate, WelfareDisburse
 from .audit_service import log_action
 from .treasury_service import assert_sufficient_funds
+from .cache_service import cache
 
 def create_welfare_request(
     db: Session,
@@ -109,6 +110,8 @@ def update_welfare_status(
 
     db.commit()
     db.refresh(req)
+    cache.invalidate_prefix("treasury:")
+    cache.invalidate_prefix("reports:")
     return req
 
 def disburse_welfare(
@@ -201,4 +204,6 @@ def disburse_welfare(
 
     db.commit()
     db.refresh(req)
+    cache.invalidate_prefix("treasury:")
+    cache.invalidate_prefix("reports:")
     return req

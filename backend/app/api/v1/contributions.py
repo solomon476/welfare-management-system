@@ -6,11 +6,12 @@ from typing import Optional
 from ...db.session import get_db
 from ...models.orm import Contribution
 from ...schemas.contribution import (
-    ContributionCreate, ContributionVerify, ContributionReverse, ContributionResponse
+    ContributionCreate, ContributionVerify, ContributionReverse, ContributionResponse,
+    BatchContributionImportRequest, BatchContributionImportResponse
 )
 from ...schemas.common import PaginatedResponse
 from ...services.contribution_service import (
-    record_contribution, verify_contribution, reverse_contribution
+    record_contribution, verify_contribution, reverse_contribution, bulk_import_contributions
 )
 
 router = APIRouter(prefix="/contributions", tags=["Contributions Ledger"])
@@ -69,6 +70,14 @@ def get_contribution(contrib_id: str, db: Session = Depends(get_db)):
 @router.post("", response_model=ContributionResponse, status_code=201)
 def create_contribution(data: ContributionCreate, db: Session = Depends(get_db)):
     return record_contribution(db, data)
+
+@router.post("/bulk-import", response_model=BatchContributionImportResponse, status_code=201)
+def import_bulk_contributions(data: BatchContributionImportRequest, db: Session = Depends(get_db)):
+    """
+    High-volume Paybill / Bank statement batch importer for 50,000–100,000 members.
+    Ingests up to 5,000 contribution transactions per batch with automated duplicate rejection.
+    """
+    return bulk_import_contributions(db, data)
 
 @router.post("/{contrib_id}/verify", response_model=ContributionResponse)
 def verify_payment(contrib_id: str, data: ContributionVerify, db: Session = Depends(get_db)):
