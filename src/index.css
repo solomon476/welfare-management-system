@@ -998,31 +998,124 @@ body {
   to { transform: scale(1); opacity: 1; }
 }
 
-/* Responsive adjustments */
+/* Mobile First-Class Navigation & Smartphone Adjustments */
 .mobile-menu-btn {
+  display: none;
+}
+
+.mobile-bottom-nav {
   display: none;
 }
 
 @media (max-width: 900px) {
   .mobile-menu-btn {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    min-width: 40px;
   }
+
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-subtle);
+    z-index: 45;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -3px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.67rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    height: 100%;
+    padding: 4px 2px;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-item.active {
+    color: var(--secondary) !important; /* Pure Gold #c59b27 */
+  }
+
+  .bottom-nav-item.active .bottom-nav-icon-wrapper {
+    color: var(--primary) !important; /* Pure Deep Green #007a3d */
+    transform: translateY(-2px);
+  }
+
+  .bottom-nav-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+  }
+
+  .bottom-nav-badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    background: var(--warning);
+    color: #000000;
+    font-size: 0.6rem;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 1px 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
   .app-sidebar {
     transform: translateX(-100%);
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
     z-index: 50;
+    width: 290px;
+    max-width: 85vw;
   }
+
   .app-sidebar.mobile-open {
     transform: translateX(0);
   }
+
   .app-main {
     margin-left: 0;
   }
+
   .app-header {
-    padding: 0 16px;
+    padding: 0 12px;
+    height: 56px;
   }
+
+  /* Leave comfortable room at the bottom for the mobile bottom nav */
   .page-content {
-    padding: 18px 14px;
+    padding: 14px 12px calc(76px + env(safe-area-inset-bottom, 12px)) 12px !important;
+  }
+
+  /* Prevent iOS Safari 16px auto-zoom */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  .table-container {
+    border-radius: var(--radius-md);
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   }
 }
 
@@ -1030,23 +1123,112 @@ body {
   .hide-on-mobile {
     display: none !important;
   }
+
   .form-row {
     grid-template-columns: 1fr !important;
+    gap: 12px;
   }
+
   .metrics-grid {
     grid-template-columns: 1fr !important;
+    gap: 12px;
   }
+
   .page-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
   }
+
   .page-actions {
     width: 100%;
     justify-content: flex-start;
     flex-wrap: wrap;
+    gap: 8px;
   }
+
   .page-actions .btn {
     flex: 1;
+    min-width: 130px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filter-bar .search-box {
+    width: 100%;
+  }
+
+  .filter-bar .filter-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .filter-bar .filter-group select {
+    flex: 1;
+    min-height: 42px;
+  }
+
+  /* Touch-friendly modal bottom sheet on mobile phones */
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 88vh !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 20px !important;
+    margin: 0 !important;
+    animation: modalSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @keyframes modalSlideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .modal-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+    padding: 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 8px));
+  }
+
+  .modal-footer .btn {
+    min-height: 46px;
+    font-size: 0.92rem;
+  }
+
+  /* Reconciled Balance Banner on Phone */
+  .reconciliation-card {
+    padding: 14px !important;
+  }
+
+  .reconciliation-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
   }
 }
 

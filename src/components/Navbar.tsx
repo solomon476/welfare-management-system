@@ -101,52 +101,54 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       <div className="header-right">
-        {/* Environment Badge & Mode Selector */}
-        {settings.isDemoMode ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {/* Environment Badge & Mode Selector (Hidden on Mobile topbar, moved to drawer) */}
+        <div className="hide-on-mobile" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {settings.isDemoMode ? (
+            <>
+              <span
+                style={{
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  color: '#fbbf24',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  padding: '3px 8px',
+                  borderRadius: 'var(--radius-full)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Currently viewing demonstration committee data. Can be purged anytime."
+              >
+                <Sparkles size={11} />
+                Demo Data
+              </span>
+              <button
+                onClick={onInitializeCleanSlate}
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: '0.72rem', color: 'var(--text-muted)', padding: '3px 7px' }}
+                title="Purge all demo records and switch to pristine production database (0 records)"
+              >
+                <Database size={12} />
+                <span>Start Blank Production</span>
+              </button>
+            </>
+          ) : (
             <span
               style={{
                 fontSize: '0.68rem',
                 fontWeight: 700,
-                background: 'rgba(245, 158, 11, 0.15)',
-                color: '#fbbf24',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
+                background: 'rgba(16, 185, 129, 0.15)',
+                color: '#34d399',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
                 padding: '3px 8px',
-                borderRadius: 'var(--radius-full)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
+                borderRadius: 'var(--radius-full)'
               }}
-              title="Currently viewing demonstration committee data. Can be purged anytime."
             >
-              <Sparkles size={11} />
-              Demo Data
+              ● Production Mode
             </span>
-            <button
-              onClick={onInitializeCleanSlate}
-              className="btn btn-ghost btn-sm"
-              style={{ fontSize: '0.72rem', color: 'var(--text-muted)', padding: '3px 7px' }}
-              title="Purge all demo records and switch to pristine production database (0 records)"
-            >
-              <Database size={12} />
-              <span className="hide-on-mobile">Start Blank Production</span>
-            </button>
-          </div>
-        ) : (
-          <span
-            style={{
-              fontSize: '0.68rem',
-              fontWeight: 700,
-              background: 'rgba(16, 185, 129, 0.15)',
-              color: '#34d399',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              padding: '3px 8px',
-              borderRadius: 'var(--radius-full)'
-            }}
-          >
-            ● Production Mode (Clean Slate)
-          </span>
-        )}
+          )}
+        </div>
 
         {/* Theme Toggle */}
         <button

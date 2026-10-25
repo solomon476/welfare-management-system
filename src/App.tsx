@@ -7,6 +7,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { RoleSwitcherModal } from './components/RoleSwitcherModal';
 import { NotificationDrawer } from './components/NotificationDrawer';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 // Admin Views
 import { AdminDashboard } from './components/admin/AdminDashboard';
@@ -279,6 +280,16 @@ export const App: React.FC = () => {
           refreshNotifications();
           setCurrentTab('my_requests');
         }}
+      />
+
+      {/* Smartphone Bottom Navigation Bar */}
+      <MobileBottomNav
+        activePortal={activePortal}
+        currentTab={currentTab}
+        setCurrentTab={setCurrentTab}
+        pendingRequestsCount={stats.pendingRequestsCount}
+        pendingContributionsCount={StorageService.getContributions().filter(c => c.status === 'recorded').length}
+        onOpenMobileMenu={() => setIsMobileNavOpen(true)}
       />
     </div>
   );
