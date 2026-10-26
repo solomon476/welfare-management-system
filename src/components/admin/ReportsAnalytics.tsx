@@ -197,7 +197,8 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ settings }) 
             <h4 style={{ fontSize: '0.9rem', marginBottom: '12px', color: 'var(--text-main)' }}>
               Operational Transactions Statement
             </h4>
-            <div className="table-container">
+            {/* Desktop Table View */}
+            <div className="table-container desktop-only">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -229,6 +230,42 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ settings }) 
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards View */}
+            <div className="mobile-card-list mobile-only">
+              {transactions.map(t => (
+                <div key={t.id} className="mobile-record-card">
+                  <div className="mobile-card-header">
+                    <div>
+                      <span className="code-badge">{t.id}</span>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '6px' }}>{t.date}</span>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: t.type === 'income' ? 'var(--success)' : '#f87171' }}>
+                      {t.type.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="mobile-card-main">
+                    <div>
+                      <div className="mobile-card-title">{t.category}</div>
+                      <div className="mobile-card-subtitle">{t.description}</div>
+                    </div>
+                    <div className="mobile-card-amount" style={{ color: t.type === 'income' ? 'var(--success)' : '#f87171' }}>
+                      {t.type === 'income' ? '+' : '-'}{settings.currency} {t.amount.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="mobile-card-grid">
+                    <div>
+                      <div className="mobile-card-grid-item-label">Ref</div>
+                      <div className="mobile-card-grid-item-value">{t.reference}</div>
+                    </div>
+                    <div>
+                      <div className="mobile-card-grid-item-label">Status</div>
+                      <div className="mobile-card-grid-item-value">{t.isReconciled ? 'Reconciled' : 'Pending'}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -257,7 +294,8 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ settings }) 
             <h4 style={{ fontSize: '0.9rem', marginBottom: '12px', color: 'var(--text-main)' }}>
               Welfare Assistance Case Disbursements
             </h4>
-            <div className="table-container">
+            {/* Desktop Table View */}
+            <div className="table-container desktop-only">
               <table className="data-table">
                 <thead>
                   <tr>
@@ -288,6 +326,35 @@ export const ReportsAnalytics: React.FC<ReportsAnalyticsProps> = ({ settings }) 
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="mobile-card-list mobile-only">
+              {requests.map(r => (
+                <div key={r.id} className="mobile-record-card">
+                  <div className="mobile-card-header">
+                    <div>
+                      <span className="code-badge">{r.id}</span>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '6px' }}>{r.urgency}</span>
+                    </div>
+                    <span className={`status-pill pill-${r.status}`}>{r.status.replace('_', ' ')}</span>
+                  </div>
+                  <div className="mobile-card-main">
+                    <div>
+                      <div className="mobile-card-title">{r.memberName}</div>
+                      <div className="mobile-card-subtitle">{r.category.replace('_', ' ').toUpperCase()}</div>
+                    </div>
+                    <div className="mobile-card-amount">
+                      {settings.currency} {r.amountRequested.toLocaleString()}
+                      {r.amountApproved !== undefined && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 700 }}>
+                          App: {settings.currency} {r.amountApproved.toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

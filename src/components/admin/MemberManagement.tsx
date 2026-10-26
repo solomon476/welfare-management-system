@@ -252,8 +252,8 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
         </select>
       </div>
 
-      {/* Members Table */}
-      <div className="table-container">
+      {/* Members Table (Desktop View) */}
+      <div className="table-container desktop-only">
         <table className="data-table">
           <thead>
             <tr>
@@ -327,6 +327,71 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Phone View: Native Mobile Card List (Zero Horizontal Scroll) */}
+      <div className="mobile-card-list mobile-only">
+        {filteredMembers.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+            No members found matching your search criteria.
+          </div>
+        ) : (
+          filteredMembers.map(member => (
+            <div key={member.id} className="mobile-record-card">
+              <div className="mobile-card-header">
+                <div>
+                  <span className="code-badge">{member.membershipNumber}</span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '6px' }}>Nat ID: {member.nationalId}</span>
+                </div>
+                <span className={`status-pill pill-${member.status}`}>
+                  <span className="status-dot" />
+                  {member.status}
+                </span>
+              </div>
+
+              <div className="mobile-card-main">
+                <div>
+                  <div className="mobile-card-title">{member.fullName}</div>
+                  <div className="mobile-card-subtitle">
+                    {member.phone} · {member.category.replace('_', ' ').toUpperCase()}
+                  </div>
+                </div>
+                <div className="mobile-card-amount">
+                  {settings.currency} {member.monthlyCommitment.toLocaleString()}
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>per month</div>
+                </div>
+              </div>
+
+              <div className="mobile-card-grid">
+                <div>
+                  <div className="mobile-card-grid-item-label">Joined</div>
+                  <div className="mobile-card-grid-item-value">{member.dateJoined}</div>
+                </div>
+                <div>
+                  <div className="mobile-card-grid-item-label">Email</div>
+                  <div className="mobile-card-grid-item-value">{member.email || 'N/A'}</div>
+                </div>
+              </div>
+
+              <div className="mobile-card-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedMember(member)}
+                >
+                  <Eye size={15} />
+                  <span>View Profile</span>
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setEditingMember(member)}
+                >
+                  <Edit size={15} />
+                  <span>Edit Details</span>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal: Create New Member (MEM-01 & MEM-05) */}

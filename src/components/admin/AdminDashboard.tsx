@@ -255,7 +255,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
+                    flexWrap: 'wrap',
+                    gap: '8px'
                   }}
                 >
                   <div>
@@ -309,7 +311,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    transition: 'all 0.15s ease'
+                    transition: 'all 0.15s ease',
+                    flexWrap: 'wrap',
+                    gap: '8px'
                   }}
                 >
                   <div>

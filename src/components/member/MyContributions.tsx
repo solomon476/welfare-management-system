@@ -104,8 +104,8 @@ export const MyContributions: React.FC<MyContributionsProps> = ({ member, settin
         </div>
       </div>
 
-      {/* Contributions Table */}
-      <div className="table-container">
+      {/* Desktop View: Multi-Column Table */}
+      <div className="table-container desktop-only">
         <table className="data-table">
           <thead>
             <tr>
@@ -151,6 +151,46 @@ export const MyContributions: React.FC<MyContributionsProps> = ({ member, settin
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Phone View: Native Mobile Card List (Zero Horizontal Scroll) */}
+      <div className="mobile-card-list mobile-only">
+        {contributions.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+            No payment records found under your membership number.
+          </div>
+        ) : (
+          contributions.map(c => (
+            <div key={c.id} className="mobile-record-card">
+              <div className="mobile-card-header">
+                <span className="code-badge">{c.referenceNumber}</span>
+                <span className={`status-pill pill-${c.status}`}>
+                  <span className="status-dot" />
+                  {c.status}
+                </span>
+              </div>
+              <div className="mobile-card-main">
+                <div>
+                  <div className="mobile-card-title">{c.category.replace('_', ' ').toUpperCase()}</div>
+                  <div className="mobile-card-subtitle">{c.paymentDate} · {c.paymentMethod.toUpperCase()}</div>
+                </div>
+                <div className="mobile-card-amount">
+                  {settings.currency} {c.amount.toLocaleString()}
+                </div>
+              </div>
+              <div className="mobile-card-grid">
+                <div>
+                  <div className="mobile-card-grid-item-label">Payment Mode</div>
+                  <div className="mobile-card-grid-item-value">{c.paymentMethod.toUpperCase()}</div>
+                </div>
+                <div>
+                  <div className="mobile-card-grid-item-label">Recorded By</div>
+                  <div className="mobile-card-grid-item-value">{c.recordedBy}</div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Print Signature Footer */}

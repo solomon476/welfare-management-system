@@ -88,7 +88,7 @@ export const MyRequests: React.FC<MyRequestsProps> = ({ member, settings, onOpen
 
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Payout Route:</span>
-                  <strong style={{ display: 'block' }}>{req.bankOrMpesaPayoutDetails || 'Direct'}</strong>
+                  <strong style={{ display: 'block', wordBreak: 'break-word' }}>{req.bankOrMpesaPayoutDetails || 'Direct'}</strong>
                 </div>
 
                 {req.disbursementId && (

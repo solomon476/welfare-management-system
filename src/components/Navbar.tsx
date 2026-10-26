@@ -8,7 +8,8 @@ import {
   ChevronDown,
   Menu,
   Database,
-  Sparkles
+  Sparkles,
+  Users
 } from 'lucide-react';
 import { UserAccount, OrganizationSettings } from '../types';
 
@@ -44,7 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   setIsMobileNavOpen
 }) => {
   return (
-    <header className="app-header">
+    <>
+      <header className="app-header">
       <div className="header-left">
         {/* Mobile Hamburger Menu Toggle */}
         <button
@@ -63,8 +65,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        {/* Portal Switcher Tabs */}
-        <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', padding: '3px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)' }}>
+        {/* Desktop Portal Switcher Tabs */}
+        <div className="desktop-portal-tabs" style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', padding: '3px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)' }}>
           <button
             onClick={() => setActivePortal('admin')}
             style={{
@@ -213,5 +215,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
     </header>
-  );
+
+    {/* Phone View: Dedicated Segmented Portal Bar (Stable, zero sideways wobble) */}
+    <div className="mobile-portal-bar">
+      <button
+        className={`mobile-portal-btn ${activePortal === 'admin' ? 'active' : ''}`}
+        onClick={() => setActivePortal('admin')}
+      >
+        <Shield size={14} />
+        <span>Administrative Portal</span>
+      </button>
+      <button
+        className={`mobile-portal-btn ${activePortal === 'member' ? 'active' : ''}`}
+        onClick={() => setActivePortal('member')}
+      >
+        <Users size={14} />
+        <span>Member Portal</span>
+      </button>
+    </div>
+  </>
+);
 };

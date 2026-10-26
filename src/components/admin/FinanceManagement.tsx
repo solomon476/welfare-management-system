@@ -207,8 +207,8 @@ export const FinanceManagement: React.FC<FinanceManagementProps> = ({ settings, 
         </select>
       </div>
 
-      {/* Ledger Table */}
-      <div className="table-container">
+      {/* Ledger Table (Desktop View) */}
+      <div className="table-container desktop-only">
         <table className="data-table">
           <thead>
             <tr>
@@ -295,6 +295,73 @@ export const FinanceManagement: React.FC<FinanceManagementProps> = ({ settings, 
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Phone View: Native Mobile Card List (Zero Horizontal Scroll) */}
+      <div className="mobile-card-list mobile-only">
+        {filteredTxns.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+            No financial ledger entries found.
+          </div>
+        ) : (
+          filteredTxns.map(t => (
+            <div key={t.id} className="mobile-record-card">
+              <div className="mobile-card-header">
+                <div>
+                  <span className="code-badge">{t.id}</span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '6px' }}>{t.date}</span>
+                </div>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                    borderRadius: 'var(--radius-full)',
+                    background: t.type === 'income' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    color: t.type === 'income' ? 'var(--success)' : '#f87171'
+                  }}
+                >
+                  {t.type === 'income' ? <ArrowDownRight size={13} /> : <ArrowUpRight size={13} />}
+                  {t.type.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="mobile-card-main">
+                <div>
+                  <div className="mobile-card-title">{t.category}</div>
+                  <div className="mobile-card-subtitle">{t.description}</div>
+                </div>
+                <div className="mobile-card-amount" style={{ color: t.type === 'income' ? 'var(--success)' : '#f87171' }}>
+                  {t.type === 'income' ? '+' : '-'}{settings.currency} {t.amount.toLocaleString()}
+                </div>
+              </div>
+
+              <div className="mobile-card-grid">
+                <div>
+                  <div className="mobile-card-grid-item-label">Ref / Voucher</div>
+                  <div className="mobile-card-grid-item-value">{t.reference} ({t.paymentMode.toUpperCase()})</div>
+                </div>
+                <div>
+                  <div className="mobile-card-grid-item-label">Status</div>
+                  <div className="mobile-card-grid-item-value">
+                    {t.isReconciled ? (
+                      <span style={{ color: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <CheckCircle2 size={12} /> Reconciled
+                      </span>
+                    ) : (
+                      <span style={{ color: '#fbbf24', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <Clock size={12} /> Pending Bank Rec
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal: Record Manual Transaction (FIN-01 & FIN-02) */}

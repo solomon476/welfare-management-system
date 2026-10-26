@@ -206,7 +206,7 @@ export const ContributionManagement: React.FC<ContributionManagementProps> = ({
       </div>
 
       {/* Quick Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '20px' }}>
         <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '16px 20px', borderRadius: 'var(--radius-md)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--success)', fontWeight: 600, fontSize: '0.8rem' }}>
             <CheckCircle2 size={16} />
@@ -267,8 +267,8 @@ export const ContributionManagement: React.FC<ContributionManagementProps> = ({
         </select>
       </div>
 
-      {/* Table */}
-      <div className="table-container">
+      {/* Table (Desktop View) */}
+      <div className="table-container desktop-only">
         <table className="data-table">
           <thead>
             <tr>
@@ -366,6 +366,82 @@ export const ContributionManagement: React.FC<ContributionManagementProps> = ({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Phone View: Native Mobile Card List (Zero Horizontal Scroll) */}
+      <div className="mobile-card-list mobile-only">
+        {filteredContributions.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+            No payment records found matching the criteria.
+          </div>
+        ) : (
+          filteredContributions.map(con => (
+            <div key={con.id} className="mobile-record-card">
+              <div className="mobile-card-header">
+                <div>
+                  <span className="code-badge">{con.referenceNumber}</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: '6px' }}>{con.paymentDate}</span>
+                </div>
+                <span className={`status-pill pill-${con.status}`}>
+                  <span className="status-dot" />
+                  {con.status}
+                </span>
+              </div>
+
+              <div className="mobile-card-main">
+                <div>
+                  <div className="mobile-card-title">{con.memberName}</div>
+                  <div className="mobile-card-subtitle">
+                    {con.membershipNumber} · {con.category.replace('_', ' ').toUpperCase()}
+                  </div>
+                </div>
+                <div className="mobile-card-amount" style={{ color: con.status === 'reversed' ? 'var(--text-muted)' : 'var(--primary)' }}>
+                  {settings.currency} {con.amount.toLocaleString()}
+                </div>
+              </div>
+
+              <div className="mobile-card-grid">
+                <div>
+                  <div className="mobile-card-grid-item-label">Payment Method</div>
+                  <div className="mobile-card-grid-item-value" style={{ textTransform: 'uppercase' }}>{con.paymentMethod}</div>
+                </div>
+                <div>
+                  <div className="mobile-card-grid-item-label">Audit / Verification</div>
+                  <div className="mobile-card-grid-item-value">
+                    {con.verifiedBy ? `Ver: ${con.verifiedBy}` : `Rec: ${con.recordedBy}`}
+                  </div>
+                </div>
+              </div>
+
+              {con.reversalReason && (
+                <div style={{ fontSize: '0.74rem', color: '#f87171', background: 'rgba(239, 68, 68, 0.08)', padding: '6px 10px', borderRadius: 'var(--radius-sm)' }}>
+                  <strong>Reversed:</strong> {con.reversalReason}
+                </div>
+              )}
+
+              {canVerify && con.status !== 'reversed' && (
+                <div className="mobile-card-actions">
+                  {con.status === 'recorded' && (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleVerify(con.id)}
+                    >
+                      <CheckCircle2 size={15} />
+                      <span>Verify Payment</span>
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-outline-danger"
+                    onClick={() => setReversingItem(con)}
+                  >
+                    <RotateCcw size={15} />
+                    <span>Reverse Entry</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal: Record External Payment */}

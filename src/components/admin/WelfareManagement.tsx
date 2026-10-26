@@ -180,8 +180,8 @@ export const WelfareManagement: React.FC<WelfareManagementProps> = ({ settings, 
         </select>
       </div>
 
-      {/* Requests Table */}
-      <div className="table-container">
+      {/* Requests Table (Desktop View) */}
+      <div className="table-container desktop-only">
         <table className="data-table">
           <thead>
             <tr>
@@ -270,6 +270,80 @@ export const WelfareManagement: React.FC<WelfareManagementProps> = ({ settings, 
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Phone View: Native Mobile Card List (Zero Horizontal Scroll) */}
+      <div className="mobile-card-list mobile-only">
+        {filteredRequests.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+            No welfare applications found for this filter.
+          </div>
+        ) : (
+          filteredRequests.map(req => (
+            <div key={req.id} className="mobile-record-card">
+              <div className="mobile-card-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="code-badge">{req.id}</span>
+                  {getUrgencyBadge(req.urgency)}
+                </div>
+                <span className={`status-pill pill-${req.status}`}>
+                  <span className="status-dot" />
+                  {req.status.replace('_', ' ')}
+                </span>
+              </div>
+
+              <div className="mobile-card-main">
+                <div>
+                  <div className="mobile-card-title">{req.memberName}</div>
+                  <div className="mobile-card-subtitle">
+                    {req.membershipNumber} · {req.category.replace('_', ' ').toUpperCase()}
+                  </div>
+                </div>
+                <div className="mobile-card-amount">
+                  {settings.currency} {req.amountRequested.toLocaleString()}
+                  {req.amountApproved !== undefined && (
+                    <div style={{ fontSize: '0.74rem', color: 'var(--success)', fontWeight: 700 }}>
+                      App: {settings.currency} {req.amountApproved.toLocaleString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mobile-card-grid">
+                <div>
+                  <div className="mobile-card-grid-item-label">Submitted</div>
+                  <div className="mobile-card-grid-item-value">{req.submissionDate}</div>
+                </div>
+                <div>
+                  <div className="mobile-card-grid-item-label">Payout Route</div>
+                  <div className="mobile-card-grid-item-value">{req.bankOrMpesaPayoutDetails || 'Direct'}</div>
+                </div>
+              </div>
+
+              <div className="mobile-card-actions">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => handleOpenReview(req)}
+                >
+                  <FileCheck size={15} />
+                  <span>Review Claim</span>
+                </button>
+                {req.status === 'approved' && canDisburse && (
+                  <button
+                    className="btn btn-success"
+                    onClick={() => {
+                      setDisbursingRequest(req);
+                      setDisburseRef('');
+                    }}
+                  >
+                    <DollarSign size={15} />
+                    <span>Disburse</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Modal: Review & Committee Decision (WEL-03 to WEL-06) */}

@@ -95,8 +95,8 @@ export const AuditLogs: React.FC = () => {
         </select>
       </div>
 
-      {/* Log Feed Table */}
-      <div className="table-container">
+      {/* Log Feed Table (Desktop View) */}
+      <div className="table-container desktop-only">
         <table className="data-table">
           <thead>
             <tr>
@@ -167,6 +167,55 @@ export const AuditLogs: React.FC = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Phone View: Native Mobile Card List (Zero Horizontal Scroll) */}
+      <div className="mobile-card-list mobile-only">
+        {filteredLogs.length === 0 ? (
+          <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+            No audit events found.
+          </div>
+        ) : (
+          filteredLogs.map(log => (
+            <div key={log.id} className="mobile-record-card">
+              <div className="mobile-card-header">
+                <span className="code-badge" style={{ fontSize: '0.72rem', color: '#93c5fd' }}>
+                  {log.action}
+                </span>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>{log.timestamp}</span>
+              </div>
+
+              <div className="mobile-card-main">
+                <div>
+                  <div className="mobile-card-title">{log.userName} ({log.userRole.replace('_', ' ')})</div>
+                  <div className="mobile-card-subtitle" style={{ marginTop: '4px', fontSize: '0.82rem', color: 'var(--text-main)', lineHeight: 1.4 }}>
+                    {log.description}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mobile-card-grid">
+                <div>
+                  <div className="mobile-card-grid-item-label">Target Domain</div>
+                  <div className="mobile-card-grid-item-value" style={{ textTransform: 'capitalize' }}>
+                    {log.entityType.replace('_', ' ')}
+                  </div>
+                </div>
+                <div>
+                  <div className="mobile-card-grid-item-label">Entity Ref</div>
+                  <div className="mobile-card-grid-item-value">{log.entityId}</div>
+                </div>
+              </div>
+
+              {(log.previousValue || log.newValue) && (
+                <div style={{ fontSize: '0.74rem', background: 'var(--bg-elevated)', padding: '6px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
+                  {log.previousValue && <div style={{ color: '#f87171' }}><strong>Before:</strong> {log.previousValue}</div>}
+                  {log.newValue && <div style={{ color: 'var(--success)' }}><strong>After:</strong> {log.newValue}</div>}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
