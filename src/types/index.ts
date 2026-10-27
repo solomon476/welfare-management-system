@@ -140,6 +140,7 @@ export interface UserAccount {
   linkedMemberId?: string;
   department?: string;
   phone?: string;
+  canAssignRoles?: boolean;
   isActive: boolean;
   lastLogin: string;
 }

@@ -162,19 +162,31 @@ export class StorageService {
     // Deduplicate
     const uniqueCandidates = candidates.filter((u, idx, arr) => arr.findIndex(x => x.id === u.id) === idx);
 
+    const customCreds = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('SW_CUSTOM_PASSWORDS') || '{}');
+      } catch { return {}; }
+    })();
+
     let targetUser = uniqueCandidates.find(u => {
+      // 1. Registered credentials in custom storage
+      if (customCreds[cleanId] === password || (rawDigits && customCreds[rawDigits] === password) || (u.phone && customCreds[u.phone] === password)) {
+        return true;
+      }
+      // 2. Official association executive password
       if (password === 'solianalphas') {
         if (cleanId.includes('799589508') || cleanId.includes('solomon')) return u.name.toLowerCase() === 'solomon';
         if (cleanId.includes('714729996') || cleanId.includes('ian')) return u.name.toLowerCase() === 'ian';
         if (cleanId.includes('758018973') || cleanId.includes('noella')) return u.name.toLowerCase() === 'noella';
         return true;
       }
+      // 3. Fallback demo passwords
       if (password === 'admin123' && u.role === 'admin') return true;
       if (password === 'member123' && u.role === 'member') return true;
       if (password === 'finance123' && u.role === 'finance_officer') return true;
       if (password === 'welfare123' && u.role === 'welfare_officer') return true;
       return false;
-    }) || uniqueCandidates[0];
+    });
 
     if (targetUser) {
       localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, 'true');
@@ -182,7 +194,7 @@ export class StorageService {
       return { success: true, user: targetUser };
     }
 
-    return { success: false, message: 'Account not found. Please verify your membership number or email.' };
+    return { success: false, message: 'Invalid phone number or password. Please verify your credentials or register.' };
   }
 
   static async logout(): Promise<void> {
@@ -237,7 +249,7 @@ export class StorageService {
     setStoredItem(STORAGE_KEYS.USERS, users);
   }
 
-  static assignUserRole(userId: string, newRole: UserRole): boolean {
+  static assignUserRole(userId: string, newRole: UserRole, canAssignRoles?: boolean): boolean {
     const users = this.getUsers();
     const idx = users.findIndex(u => u.id === userId);
     if (idx !== -1) {
@@ -245,19 +257,117 @@ export class StorageService {
       users[idx].role = newRole;
       if (!users[idx].roles) users[idx].roles = [newRole];
       else if (!users[idx].roles.includes(newRole)) users[idx].roles.push(newRole);
+      if (canAssignRoles !== undefined) {
+        users[idx].canAssignRoles = canAssignRoles;
+      }
       this.saveUsers(users);
 
       this.addAuditLog(
         'ROLE_ASSIGNED',
         'auth',
         userId,
-        `Administrator assigned role '${newRole}' to ${users[idx].name}`,
+        `Administrator assigned role '${newRole}'${canAssignRoles ? ' with role assignment authority' : ''} to ${users[idx].name}`,
         oldRole,
         newRole
       );
       return true;
     }
     return false;
+  }
+
+  static async registerNewMember(
+    fullName: string,
+    phone: string,
+    password: string,
+    nationalId?: string
+  ): Promise<{ success: boolean; user?: UserAccount; message?: string }> {
+    const members = this.getMembers();
+    const cleanPhone = phone.trim();
+    const cleanDigits = cleanPhone.replace(/\D/g, '');
+    const corePhone = cleanDigits.slice(-9);
+
+    const exists = members.some(m => m.phone.replace(/\D/g, '').endsWith(corePhone));
+    if (exists) {
+      return { success: false, message: 'A member with this phone number is already registered. Please sign in.' };
+    }
+
+    const count = members.length + 1;
+    const year = new Date().getFullYear();
+    const newMemberId = `SW-M${String(count).padStart(3, '0')}`;
+    const newMembershipNumber = `SW-${year}-${String(count).padStart(3, '0')}`;
+    const newUserId = `USR-${String(count).padStart(3, '0')}`;
+
+    const newMember: Member = {
+      id: newMemberId,
+      membershipNumber: newMembershipNumber,
+      fullName: fullName.trim(),
+      nationalId: nationalId ? nationalId.trim() : `NAT-${cleanDigits.slice(-6)}`,
+      phone: cleanPhone,
+      email: `${cleanDigits.slice(-9)}@solianwolves.org`,
+      category: 'full_member',
+      status: 'active',
+      dateJoined: new Date().toISOString().split('T')[0],
+      monthlyCommitment: 1500,
+      nextOfKin: {
+        name: `${fullName.trim()} Family`,
+        relationship: 'Family',
+        phone: cleanPhone
+      },
+      notes: 'Self-registered member. Regular Welfare Member.'
+    };
+
+    const newUser: UserAccount = {
+      id: newUserId,
+      name: fullName.trim(),
+      email: newMember.email,
+      phone: cleanPhone,
+      role: 'member',
+      roles: ['member'],
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      linkedMemberId: newMemberId,
+      department: 'General Assembly',
+      isActive: true,
+      lastLogin: new Date().toISOString().replace('T', ' ').substring(0, 16)
+    };
+
+    this.saveMembers([...members, newMember]);
+    const users = this.getUsers();
+    this.saveUsers([...users, newUser]);
+
+    try {
+      const creds = JSON.parse(localStorage.getItem('SW_CUSTOM_PASSWORDS') || '{}');
+      creds[cleanPhone] = password;
+      creds[cleanDigits] = password;
+      creds[newMembershipNumber] = password;
+      localStorage.setItem('SW_CUSTOM_PASSWORDS', JSON.stringify(creds));
+    } catch {}
+
+    try {
+      await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fullName.trim(),
+          email: newMember.email,
+          password: password,
+          role: 'member',
+          linked_member_id: newMemberId
+        })
+      });
+    } catch {}
+
+    this.addAuditLog(
+      'MEMBER_JOINED',
+      'member',
+      newMemberId,
+      `New member ${fullName.trim()} joined with phone ${cleanPhone} as Welfare Member`
+    );
+
+    return {
+      success: true,
+      user: newUser,
+      message: `Registration successful! Welcome ${fullName.trim()}. Your Membership Number is ${newMembershipNumber}.`
+    };
   }
 
   // Settings
@@ -285,6 +395,10 @@ export class StorageService {
   // Members
   static getMembers(): Member[] {
     return getStoredItem<Member[]>(STORAGE_KEYS.MEMBERS, initialMembers);
+  }
+
+  static saveMembers(members: Member[]): void {
+    setStoredItem(STORAGE_KEYS.MEMBERS, members);
   }
 
   static getMemberById(id: string): Member | undefined {

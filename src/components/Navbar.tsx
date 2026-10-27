@@ -221,11 +221,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </button>
 
-        {/* Active Role & User Switcher Trigger */}
+        {/* Active Role & User Profile */}
         <div
-          onClick={onOpenRoleSwitcher}
+          onClick={() => {
+            if (currentUser.role === 'admin' || currentUser.canAssignRoles) {
+              onOpenRoleSwitcher();
+            }
+          }}
           className="user-profile-badge"
-          title="Click to test different roles (Admin, Welfare Officer, Finance, Approver, Member)"
+          style={{
+            cursor: (currentUser.role === 'admin' || currentUser.canAssignRoles) ? 'pointer' : 'default'
+          }}
+          title={
+            (currentUser.role === 'admin' || currentUser.canAssignRoles)
+              ? 'Administrator Role Management'
+              : `Logged in as ${currentUser.name} (${currentUser.role})`
+          }
         >
           <img
             src={currentUser.avatar}
@@ -238,7 +249,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               {currentUser.role.replace('_', ' ')}
             </span>
           </div>
-          <ChevronDown size={14} style={{ color: 'var(--text-muted)', marginLeft: '2px' }} />
+          {(currentUser.role === 'admin' || currentUser.canAssignRoles) && (
+            <ChevronDown size={14} style={{ color: 'var(--text-muted)', marginLeft: '2px' }} />
+          )}
         </div>
 
         {/* Sign Out Action Button */}

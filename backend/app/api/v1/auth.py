@@ -442,19 +442,44 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
 
 @router.post("/register", response_model=UserResponse, status_code=201)
 def register(data: UserCreate, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == data.email.lower().strip()).first()
+    clean_email = data.email.lower().strip()
+    existing = db.query(User).filter(User.email == clean_email).first()
     if existing:
         raise HTTPException(status_code=400, detail="User with this email already exists")
 
     count = db.query(User).count() + 1
+    new_user_id = f"USR-{count:03d}"
+
+    # If linked member id provided and not existing, create corresponding Member record
+    if data.linked_member_id:
+        existing_member = db.query(Member).filter(Member.id == data.linked_member_id).first()
+        if not existing_member:
+            member_count = db.query(Member).count() + 1
+            new_mem = Member(
+                id=data.linked_member_id,
+                membership_number=f"SW/{datetime.utcnow().year}/{member_count:04d}",
+                full_name=data.name,
+                national_id=f"NAT-{count:05d}",
+                phone=clean_email.split("@")[0] if clean_email.split("@")[0].isdigit() else f"07{count:08d}",
+                email=clean_email,
+                category="full_member",
+                status="active",
+                date_joined=date.today(),
+                monthly_commitment=Decimal("1500.00"),
+                next_of_kin_name=f"{data.name} Family",
+                next_of_kin_relationship="Family",
+                next_of_kin_phone="N/A"
+            )
+            db.add(new_mem)
+
     new_user = User(
-        id=f"USR-{count:03d}",
+        id=new_user_id,
         name=data.name,
-        email=data.email.lower().strip(),
+        email=clean_email,
         hashed_password=hash_password(data.password),
-        role=data.role,
-        avatar=data.avatar,
-        department=data.department,
+        role=data.role or "member",
+        avatar=data.avatar or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+        department=data.department or "General Assembly",
         linked_member_id=data.linked_member_id,
         is_active=True
     )

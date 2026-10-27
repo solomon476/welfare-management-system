@@ -637,14 +637,19 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
                 </div>
               )}
 
-              {/* Administrator Role Authority Assignment (Secretary, Finance, Welfare, etc.) */}
-              {userRole === 'admin' && (() => {
+              {/* Administrator Role Authority Assignment & Delegation (Secretary, Finance, Welfare, etc.) */}
+              {(() => {
+                const currentUser = StorageService.getCurrentUser();
+                const canManageRoles = userRole === 'admin' || currentUser.canAssignRoles;
+                if (!canManageRoles) return null;
+
                 const users = StorageService.getUsers();
                 const matchedUser = users.find(u => u.linkedMemberId === selectedMember.id || (u.email && u.email.toLowerCase() === selectedMember.email?.toLowerCase()));
                 const currentRole = matchedUser ? matchedUser.role : 'member';
+                const hasDelegatedPower = matchedUser ? !!matchedUser.canAssignRoles : false;
 
                 return (
-                  <div style={{ marginTop: '16px', padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ marginTop: '16px', padding: '14px', borderRadius: '10px', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <strong style={{ fontSize: '0.8rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Shield size={14} style={{ color: 'var(--primary)' }} />
@@ -654,13 +659,14 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
                         Current: {currentRole.replace('_', ' ').toUpperCase()}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
                       <select
                         value={currentRole}
                         onChange={(e) => {
                           const newR = e.target.value as UserRole;
                           if (matchedUser) {
-                            StorageService.assignUserRole(matchedUser.id, newR);
+                            StorageService.assignUserRole(matchedUser.id, newR, matchedUser.canAssignRoles);
                           } else {
                             const newU = {
                               id: `USR-${selectedMember.id}`,
@@ -690,6 +696,40 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
                         <option value="auditor">🔍 Independent Auditor</option>
                       </select>
                     </div>
+
+                    {/* Admin Delegation: Grant other members the power to assign roles */}
+                    {userRole === 'admin' && (
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer', marginTop: '6px' }}>
+                        <input
+                          type="checkbox"
+                          checked={hasDelegatedPower}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            if (matchedUser) {
+                              StorageService.assignUserRole(matchedUser.id, matchedUser.role, checked);
+                            } else {
+                              const newU = {
+                                id: `USR-${selectedMember.id}`,
+                                name: selectedMember.fullName,
+                                email: selectedMember.email || `${selectedMember.phone}@solianwolves.org`,
+                                phone: selectedMember.phone,
+                                role: currentRole,
+                                roles: [currentRole],
+                                canAssignRoles: checked,
+                                avatar: selectedMember.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                                linkedMemberId: selectedMember.id,
+                                isActive: true,
+                                lastLogin: 'Just now'
+                              };
+                              StorageService.saveUsers([...users, newU]);
+                            }
+                            setSelectedMember({ ...selectedMember });
+                            alert(checked ? `Granted role assignment authority to ${selectedMember.fullName}!` : `Revoked role assignment authority from ${selectedMember.fullName}.`);
+                          }}
+                        />
+                        <span>Grant this member authority to assign and manage roles</span>
+                      </label>
+                    )}
                   </div>
                 );
               })()}
