@@ -116,7 +116,7 @@ def grant_user_role(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found")
 
     target_role = data.role.strip().lower()
-    valid_roles = {"admin", "finance_officer", "welfare_officer", "welfare_approver", "approver", "member", "auditor"}
+    valid_roles = {"admin", "secretary", "finance_officer", "welfare_officer", "welfare_approver", "approver", "member", "auditor"}
     if target_role not in valid_roles:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

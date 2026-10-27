@@ -14,7 +14,8 @@ import {
   Mail,
   Calendar,
   CreditCard,
-  UserCheck
+  UserCheck,
+  Shield
 } from 'lucide-react';
 import { StorageService } from '../../services/storageService';
 import { Member, MemberStatus, MemberCategory, OrganizationSettings, UserRole } from '../../types';
@@ -635,6 +636,63 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
                   <strong>Notes:</strong> {selectedMember.notes}
                 </div>
               )}
+
+              {/* Administrator Role Authority Assignment (Secretary, Finance, Welfare, etc.) */}
+              {userRole === 'admin' && (() => {
+                const users = StorageService.getUsers();
+                const matchedUser = users.find(u => u.linkedMemberId === selectedMember.id || (u.email && u.email.toLowerCase() === selectedMember.email?.toLowerCase()));
+                const currentRole = matchedUser ? matchedUser.role : 'member';
+
+                return (
+                  <div style={{ marginTop: '16px', padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <strong style={{ fontSize: '0.8rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Shield size={14} style={{ color: 'var(--primary)' }} />
+                        Appoint / Assign Officer Role
+                      </strong>
+                      <span className="badge-count" style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.68rem', padding: '2px 8px' }}>
+                        Current: {currentRole.replace('_', ' ').toUpperCase()}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <select
+                        value={currentRole}
+                        onChange={(e) => {
+                          const newR = e.target.value as UserRole;
+                          if (matchedUser) {
+                            StorageService.assignUserRole(matchedUser.id, newR);
+                          } else {
+                            const newU = {
+                              id: `USR-${selectedMember.id}`,
+                              name: selectedMember.fullName,
+                              email: selectedMember.email || `${selectedMember.phone}@solianwolves.org`,
+                              phone: selectedMember.phone,
+                              role: newR,
+                              roles: [newR],
+                              avatar: selectedMember.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+                              linkedMemberId: selectedMember.id,
+                              isActive: true,
+                              lastLogin: 'Just now'
+                            };
+                            StorageService.saveUsers([...users, newU]);
+                          }
+                          setSelectedMember({ ...selectedMember });
+                          alert(`Appointed ${selectedMember.fullName} as ${newR.replace('_', ' ').toUpperCase()}!`);
+                        }}
+                        style={{ padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '0.82rem', flex: 1 }}
+                      >
+                        <option value="member">👤 Welfare Member</option>
+                        <option value="secretary">📋 Executive Secretary</option>
+                        <option value="finance_officer">💰 Finance Officer (Treasurer)</option>
+                        <option value="welfare_officer">🤝 Welfare Officer</option>
+                        <option value="approver">⚖️ Welfare Approver (Trustee)</option>
+                        <option value="admin">🛡️ Administrator</option>
+                        <option value="auditor">🔍 Independent Auditor</option>
+                      </select>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="modal-footer">

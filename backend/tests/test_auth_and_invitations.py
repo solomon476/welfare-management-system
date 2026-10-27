@@ -7,10 +7,10 @@ from app.models.orm import User, Member, AccountInvitation, UserSession, Passwor
 from app.core.security import hash_password, create_access_token
 try:
     from scripts.setup_initial_admin import setup_admin
-    from scripts.backup_restore import test_backup_and_restore_cycle
+    from scripts.backup_restore import test_backup_and_restore_cycle as run_backup_restore_verification
 except ImportError:
     from backend.scripts.setup_initial_admin import setup_admin
-    from backend.scripts.backup_restore import test_backup_and_restore_cycle
+    from backend.scripts.backup_restore import test_backup_and_restore_cycle as run_backup_restore_verification
 
 def test_login_with_email_and_membership_number(client, db_session):
     """
@@ -229,5 +229,5 @@ def test_automated_backup_and_restore_cycle():
     Acceptance Criteria #9:
     Automated backup verification test with cryptographic checksum validation.
     """
-    passed = test_backup_and_restore_cycle()
+    passed = run_backup_restore_verification()
     assert passed is True

@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setIsMobileNavOpen,
   onLogout
 }) => {
-  const isOfficer = ['admin', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
+  const isOfficer = ['admin', 'secretary', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
     r => currentUser.role === r || (currentUser.roles && currentUser.roles.includes(r as any))
   );
 

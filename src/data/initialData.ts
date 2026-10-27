@@ -30,6 +30,42 @@ export const initialOrgSettings: OrganizationSettings = {
 
 export const initialUserAccounts: UserAccount[] = [
   {
+    id: 'USR-SOLOMON',
+    name: 'Solomon',
+    email: 'solomon@solianwolves.org',
+    phone: '0799589508',
+    role: 'admin',
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+    department: 'Executive Administration',
+    linkedMemberId: 'SW-M-SOLOMON',
+    isActive: true,
+    lastLogin: '2026-10-27 22:30'
+  },
+  {
+    id: 'USR-IAN',
+    name: 'Ian',
+    email: 'ian@solianwolves.org',
+    phone: '0714729996',
+    role: 'secretary',
+    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
+    department: 'Executive Secretariat',
+    linkedMemberId: 'SW-M-IAN',
+    isActive: true,
+    lastLogin: '2026-10-27 22:15'
+  },
+  {
+    id: 'USR-NOELLA',
+    name: 'Noella',
+    email: 'noella@solianwolves.org',
+    phone: '0758018973',
+    role: 'finance_officer',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+    department: 'Treasury & Finance',
+    linkedMemberId: 'SW-M-NOELLA',
+    isActive: true,
+    lastLogin: '2026-10-27 21:50'
+  },
+  {
     id: 'USR-001',
     name: 'Sarah Koech',
     email: 'admin@solianwolves.org',
@@ -93,6 +129,63 @@ export const initialUserAccounts: UserAccount[] = [
 ];
 
 export const initialMembers: Member[] = [
+  {
+    id: 'SW-M-SOLOMON',
+    membershipNumber: 'SW-EXEC-001',
+    fullName: 'Solomon',
+    nationalId: '30112233',
+    phone: '0799589508',
+    email: 'solomon@solianwolves.org',
+    category: 'full_member',
+    status: 'active',
+    dateJoined: '2024-01-01',
+    monthlyCommitment: 1500,
+    nextOfKin: {
+      name: 'Solomon Family',
+      relationship: 'Family',
+      phone: '0799589508'
+    },
+    notes: 'Association Appointed Administrator with Executive Governance Authority.',
+    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'SW-M-IAN',
+    membershipNumber: 'SW-EXEC-002',
+    fullName: 'Ian',
+    nationalId: '30112234',
+    phone: '0714729996',
+    email: 'ian@solianwolves.org',
+    category: 'full_member',
+    status: 'active',
+    dateJoined: '2024-01-01',
+    monthlyCommitment: 1500,
+    nextOfKin: {
+      name: 'Ian Family',
+      relationship: 'Family',
+      phone: '0714729996'
+    },
+    notes: 'Executive Secretary & Member Secretariat Officer.',
+    avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'
+  },
+  {
+    id: 'SW-M-NOELLA',
+    membershipNumber: 'SW-EXEC-003',
+    fullName: 'Noella',
+    nationalId: '30112235',
+    phone: '0758018973',
+    email: 'noella@solianwolves.org',
+    category: 'full_member',
+    status: 'active',
+    dateJoined: '2024-01-01',
+    monthlyCommitment: 1500,
+    nextOfKin: {
+      name: 'Noella Family',
+      relationship: 'Family',
+      phone: '0758018973'
+    },
+    notes: 'Finance Officer & Welfare Treasury Management.',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80'
+  },
   {
     id: 'SW-M001',
     membershipNumber: 'SW-2024-001',

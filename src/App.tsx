@@ -37,7 +37,7 @@ export const App: React.FC = () => {
     return StorageService.isAuthenticated();
   });
 
-  const isOfficer = ['admin', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
+  const isOfficer = ['admin', 'secretary', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
     r => currentUser.role === r || (currentUser.roles && currentUser.roles.includes(r as any))
   );
 
@@ -75,7 +75,7 @@ export const App: React.FC = () => {
   const handleLoginSuccess = (user: UserAccount) => {
     setCurrentUser(user);
     setIsAuth(true);
-    const officer = ['admin', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
+    const officer = ['admin', 'secretary', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
       r => user.role === r || (user.roles && user.roles.includes(r as any))
     );
     if (officer) {

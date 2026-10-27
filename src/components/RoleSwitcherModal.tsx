@@ -25,6 +25,11 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       desc: 'Full system privileges: manages user accounts, organizational settings, and all operational modules.',
       icon: Shield
     },
+    secretary: {
+      title: 'Executive Secretary',
+      desc: 'Secretariat & governance: maintains meeting proceedings, manages member records, and issues official association resolutions.',
+      icon: FileCheck
+    },
     welfare_officer: {
       title: 'Welfare Officer',
       desc: 'Member care: creates & updates member profiles, performs document checks, and records incoming payments.',

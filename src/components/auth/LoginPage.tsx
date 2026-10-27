@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Shield,
   Lock,
-  User,
+  Phone,
   ArrowRight,
   KeyRound,
   CheckCircle2,
@@ -10,8 +10,7 @@ import {
   HelpCircle,
   Eye,
   EyeOff,
-  Sparkles,
-  Smartphone
+  Sparkles
 } from 'lucide-react';
 import { StorageService } from '../../services/storageService';
 import { UserAccount, OrganizationSettings } from '../../types';
@@ -22,8 +21,8 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }) => {
-  const [identifier, setIdentifier] = useState('001');
-  const [password, setPassword] = useState('admin123');
+  const [identifier, setIdentifier] = useState('0799589508');
+  const [password, setPassword] = useState('solianalphas');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -44,7 +43,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim()) {
-      setErrorMsg('Please enter your Number or Email.');
+      setErrorMsg('Please enter your Phone Number or Member Number.');
       return;
     }
     if (!password) {
@@ -59,18 +58,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
     setIsLoading(false);
 
     if (result.success && result.user) {
-      // Visually display identified role before transitioning
       setIdentifiedUser(result.user);
       setTimeout(() => {
         onLoginSuccess(result.user!);
       }, 750);
     } else {
-      setErrorMsg(result.message || 'Invalid number or password. Please verify your credentials.');
+      setErrorMsg(result.message || 'Invalid phone number or password. Please verify your credentials.');
     }
   };
 
-  const handleSelectAccount = (id: string, pass: string) => {
-    setIdentifier(id);
+  const handleSelectAccount = (phoneNum: string, pass: string) => {
+    setIdentifier(phoneNum);
     setPassword(pass);
     setErrorMsg(null);
   };
@@ -109,7 +107,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
   const handleRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!recoveryId.trim()) {
-      setErrorMsg('Please enter your Member Number or Email.');
+      setErrorMsg('Please enter your Phone Number or Email.');
       return;
     }
     setIsLoading(true);
@@ -132,15 +130,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'Administrator (Executive Access)';
+        return 'Administrator (Executive Authority)';
+      case 'secretary':
+        return 'Executive Secretary (Secretariat & Governance)';
       case 'finance_officer':
         return 'Finance Officer (Treasury & Verification)';
       case 'welfare_officer':
         return 'Welfare Officer (Applications Review)';
+      case 'approver':
       case 'welfare_approver':
         return 'Welfare Approver (Trustee Approvals)';
       case 'auditor':
-        return 'Auditor (Read-Only Financial Logs)';
+        return 'Auditor (Financial Oversight)';
       case 'member':
       default:
         return 'Welfare Member (Member Portal)';
@@ -171,7 +172,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
         }}
       >
         {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '22px' }}>
           <div
             style={{
               width: '56px',
@@ -191,12 +192,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
             {settings.orgName}
           </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-            Sign in with your assigned number & password
+          <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', margin: 0 }}>
+            Sign in with Phone Number & Password
           </p>
         </div>
 
-        {/* Quick Select Buttons for Client Testing */}
+        {/* 1-Click Quick Select for Client Testing */}
         <div style={{ marginBottom: '20px' }}>
           <div
             style={{
@@ -207,66 +208,69 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
             }}
           >
             <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Quick Fill Demo Logins:
+              Quick Fill Authorized Accounts:
             </span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Click to fill</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Click to test</span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
             <button
               type="button"
-              onClick={() => handleSelectAccount('001', 'admin123')}
+              onClick={() => handleSelectAccount('0799589508', 'solianalphas')}
               style={{
                 padding: '8px 6px',
                 borderRadius: '8px',
-                border: identifier === '001' && password === 'admin123' ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
-                background: identifier === '001' && password === 'admin123' ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-elevated)',
+                border: identifier === '0799589508' ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
+                background: identifier === '0799589508' ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-elevated)',
                 cursor: 'pointer',
                 textAlign: 'center',
-                color: 'var(--text-main)'
+                color: 'var(--text-main)',
+                transition: 'all 0.15s ease'
               }}
             >
-              <div style={{ fontSize: '0.74rem', fontWeight: 700 }}>🛡️ Admin</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>No: 001</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>🛡️ Solomon</div>
+              <div style={{ fontSize: '0.64rem', color: 'var(--primary)' }}>Admin</div>
             </button>
 
             <button
               type="button"
-              onClick={() => handleSelectAccount('001', 'member123')}
+              onClick={() => handleSelectAccount('0714729996', 'solianalphas')}
               style={{
                 padding: '8px 6px',
                 borderRadius: '8px',
-                border: identifier === '001' && password === 'member123' ? '1px solid #10b981' : '1px solid var(--border-subtle)',
-                background: identifier === '001' && password === 'member123' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-elevated)',
+                border: identifier === '0714729996' ? '1px solid #10b981' : '1px solid var(--border-subtle)',
+                background: identifier === '0714729996' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-elevated)',
                 cursor: 'pointer',
                 textAlign: 'center',
-                color: 'var(--text-main)'
+                color: 'var(--text-main)',
+                transition: 'all 0.15s ease'
               }}
             >
-              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#34d399' }}>👤 Member</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>No: 001</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>📋 Ian</div>
+              <div style={{ fontSize: '0.64rem', color: '#10b981' }}>Secretary</div>
             </button>
 
             <button
               type="button"
-              onClick={() => handleSelectAccount('003', 'finance123')}
+              onClick={() => handleSelectAccount('0758018973', 'solianalphas')}
               style={{
                 padding: '8px 6px',
                 borderRadius: '8px',
-                border: identifier === '003' ? '1px solid #f59e0b' : '1px solid var(--border-subtle)',
-                background: identifier === '003' ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-elevated)',
+                border: identifier === '0758018973' ? '1px solid #f59e0b' : '1px solid var(--border-subtle)',
+                background: identifier === '0758018973' ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-elevated)',
                 cursor: 'pointer',
                 textAlign: 'center',
-                color: 'var(--text-main)'
+                color: 'var(--text-main)',
+                transition: 'all 0.15s ease'
               }}
             >
-              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#fbbf24' }}>💰 Finance</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>No: 003</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700 }}>💰 Noella</div>
+              <div style={{ fontSize: '0.64rem', color: '#f59e0b' }}>Finance</div>
             </button>
           </div>
         </div>
 
-        {/* Success Identification Alert */}
+        {/* Live Role Identification Alert */}
         {identifiedUser && (
           <div
             style={{
@@ -288,10 +292,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
               <span>Identity Verified: {identifiedUser.name}</span>
             </div>
             <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
-              Role: <strong>{getRoleDisplayName(identifiedUser.role)}</strong>
+              Identified Role: <strong>{getRoleDisplayName(identifiedUser.role)}</strong>
             </div>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Redirecting to authorized dashboard...
+              Launching authorized portal...
             </div>
           </div>
         )}
@@ -330,10 +334,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                   marginBottom: '6px'
                 }}
               >
-                Member / Staff Number (or Email)
+                Phone Number (or Member Number)
               </label>
               <div style={{ position: 'relative' }}>
-                <User
+                <Phone
                   size={16}
                   style={{
                     position: 'absolute',
@@ -345,7 +349,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                 />
                 <input
                   type="text"
-                  placeholder="e.g. 001, SW-M001, or admin"
+                  placeholder="e.g. 0799589508"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   style={{
@@ -355,7 +359,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-elevated)',
                     color: 'var(--text-main)',
-                    fontSize: '0.88rem'
+                    fontSize: '0.9rem',
+                    letterSpacing: '0.02em'
                   }}
                   required
                 />
@@ -395,7 +400,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                 />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
+                  placeholder="Enter password (e.g. solianalphas)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={{
@@ -405,7 +410,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-elevated)',
                     color: 'var(--text-main)',
-                    fontSize: '0.88rem'
+                    fontSize: '0.9rem'
                   }}
                   required
                 />
@@ -446,9 +451,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
               }}
             >
               {isLoading ? (
-                'Verifying Credentials...'
+                'Identifying Account...'
               ) : identifiedUser ? (
-                'Access Granted! Opening...'
+                'Role Verified! Accessing...'
               ) : (
                 <>
                   <span>Sign In & Identify Role</span>
@@ -546,17 +551,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
         {activeView === 'forgot' && (
           <form onSubmit={handleRecovery}>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '18px' }}>
-              Enter your Member Number or registered Email address to recover your password.
+              Enter your registered Phone Number or Email address to recover your password.
             </p>
             <div style={{ marginBottom: '22px' }}>
               <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Member Number or Email
+                Phone Number or Email
               </label>
               <div style={{ position: 'relative' }}>
-                <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   type="text"
-                  placeholder="e.g. 001, SW-M001, or email"
+                  placeholder="e.g. 0799589508"
                   value={recoveryId}
                   onChange={(e) => setRecoveryId(e.target.value)}
                   style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}

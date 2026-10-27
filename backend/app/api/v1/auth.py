@@ -65,13 +65,16 @@ def login(data: LoginRequest, response: Response, request: Request, db: Session 
     # 1. Direct Email Lookup
     candidates.extend(db.query(User).filter(func.lower(User.email) == clean_id).all())
 
-    # 2. Exact User ID or Member ID
+    # 2. Exact User ID or Member ID or Name (e.g. "solomon", "ian", "noella")
     candidates.extend(db.query(User).filter(func.lower(User.id) == clean_id).all())
     candidates.extend(db.query(User).filter(func.lower(User.linked_member_id) == clean_id).all())
+    candidates.extend(db.query(User).filter(func.lower(User.name) == clean_id).all())
 
     # 3. Role/keyword shortcuts
     if clean_id in ["admin", "administrator"]:
         candidates.extend(db.query(User).filter(User.role == "admin").all())
+    elif clean_id in ["secretary"]:
+        candidates.extend(db.query(User).filter(User.role == "secretary").all())
     elif clean_id in ["member"]:
         candidates.extend(db.query(User).filter(User.role == "member").all())
     elif clean_id in ["finance", "treasurer"]:
@@ -83,16 +86,27 @@ def login(data: LoginRequest, response: Response, request: Request, db: Session 
     elif clean_id in ["auditor"]:
         candidates.extend(db.query(User).filter(User.role == "auditor").all())
 
-    # 4. Member registry lookups
-    matching_members = db.query(Member).filter(
+    # 4. Member phone number and registry lookups
+    matching_members = []
+    # Always check membership number, id, full name, or exact phone/national ID
+    matching_members.extend(db.query(Member).filter(
         (func.lower(Member.id) == clean_id) |
         (func.lower(Member.membership_number) == clean_id) |
         (Member.national_id == clean_id) |
-        (Member.phone == clean_id)
-    ).all()
+        (Member.phone == clean_id) |
+        (func.lower(Member.full_name) == clean_id)
+    ).all())
+
+    # If phone digits or national ID digits are present
+    if len(raw_digits) >= 8:
+        phone_core = raw_digits[-9:]
+        matching_members.extend(db.query(Member).filter(
+            (Member.phone.ilike(f"%{phone_core}%")) |
+            (Member.national_id == raw_digits)
+        ).all())
 
     # 5. Numeric digits matching (e.g. "001" or "1")
-    if raw_digits:
+    if raw_digits and len(raw_digits) < 8:
         padded = raw_digits.zfill(3)
         candidates.extend(db.query(User).filter(User.id.ilike(f"%{padded}")).all())
         matching_members.extend(db.query(Member).filter(
