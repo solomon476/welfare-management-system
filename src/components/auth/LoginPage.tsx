@@ -202,7 +202,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
+        padding: '16px',
         background: 'radial-gradient(ellipse at 50% 25%, rgba(37, 99, 235, 0.15) 0%, rgba(9, 13, 22, 0.98) 75%)',
         position: 'relative'
       }}
@@ -212,7 +212,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
         style={{
           width: '100%',
           maxWidth: '440px',
-          padding: '36px 32px',
+          padding: '32px clamp(18px, 5vw, 30px)',
           boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle)',
           borderRadius: '16px',
           position: 'relative'
