@@ -12,7 +12,6 @@ import {
   EyeOff,
   UserPlus,
   User,
-  Sparkles
 } from 'lucide-react';
 import { StorageService } from '../../services/storageService';
 import { UserAccount, OrganizationSettings } from '../../types';
@@ -79,31 +78,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!joinName.trim()) {
-      setErrorMsg('Please enter your full official name.');
-      return;
-    }
-    if (!joinPhone.trim()) {
-      setErrorMsg('Please enter your valid phone number.');
-      return;
-    }
-    if (joinPassword.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
-      return;
-    }
-    if (joinPassword !== joinConfirmPassword) {
-      setErrorMsg('Passwords do not match.');
-      return;
-    }
+    if (!joinName.trim()) { setErrorMsg('Please enter your full official name.'); return; }
+    if (!joinPhone.trim()) { setErrorMsg('Please enter your valid phone number.'); return; }
+    if (joinPassword.length < 6) { setErrorMsg('Password must be at least 6 characters long.'); return; }
+    if (joinPassword !== joinConfirmPassword) { setErrorMsg('Passwords do not match.'); return; }
 
     setIsLoading(true);
     setErrorMsg(null);
 
     const result = await StorageService.registerNewMember(
-      joinName.trim(),
-      joinPhone.trim(),
-      joinPassword,
-      joinNationalId.trim()
+      joinName.trim(), joinPhone.trim(), joinPassword, joinNationalId.trim()
     );
     setIsLoading(false);
 
@@ -111,10 +95,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
       setJoinSuccess(result.message || 'Registered successfully! You are now a member.');
       setIdentifier(joinPhone.trim());
       setPassword(joinPassword);
-      setTimeout(() => {
-        setJoinSuccess(null);
-        setActiveView('login');
-      }, 2000);
+      setTimeout(() => { setJoinSuccess(null); setActiveView('login'); }, 2000);
     } else {
       setErrorMsg(result.message || 'Registration failed. Please try again.');
     }
@@ -122,18 +103,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
   const handleActivate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activationToken.trim()) {
-      setErrorMsg('Please enter your invitation activation token.');
-      return;
-    }
-    if (newPassword.length < 8) {
-      setErrorMsg('Password must be at least 8 characters long.');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setErrorMsg('Passwords do not match.');
-      return;
-    }
+    if (!activationToken.trim()) { setErrorMsg('Please enter your invitation activation token.'); return; }
+    if (newPassword.length < 8) { setErrorMsg('Password must be at least 8 characters long.'); return; }
+    if (newPassword !== confirmPassword) { setErrorMsg('Passwords do not match.'); return; }
 
     setIsLoading(true);
     setErrorMsg(null);
@@ -142,10 +114,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
     if (result.success) {
       setActivationSuccess(result.message);
-      setTimeout(() => {
-        setActiveView('login');
-        setActivationSuccess(null);
-      }, 2000);
+      setTimeout(() => { setActiveView('login'); setActivationSuccess(null); }, 2000);
     } else {
       setErrorMsg(result.message);
     }
@@ -153,10 +122,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
   const handleRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recoveryId.trim()) {
-      setErrorMsg('Please enter your phone number or email.');
-      return;
-    }
+    if (!recoveryId.trim()) { setErrorMsg('Please enter your phone number or email.'); return; }
     setIsLoading(true);
     setErrorMsg(null);
     try {
@@ -176,301 +142,234 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'Administrator (Executive Authority)';
-      case 'secretary':
-        return 'Executive Secretary (Secretariat & Governance)';
-      case 'finance_officer':
-        return 'Finance Officer (Treasury & Verification)';
-      case 'welfare_officer':
-        return 'Welfare Officer (Applications Review)';
-      case 'approver':
-      case 'welfare_approver':
-        return 'Welfare Approver (Trustee Approvals)';
-      case 'auditor':
-        return 'Auditor (Financial Oversight)';
-      case 'member':
-      default:
-        return 'Welfare Member (Member Portal)';
+      case 'admin': return 'Administrator';
+      case 'secretary': return 'Executive Secretary';
+      case 'finance_officer': return 'Finance Officer';
+      case 'welfare_officer': return 'Welfare Officer';
+      case 'approver': case 'welfare_approver': return 'Welfare Approver';
+      case 'auditor': return 'Auditor';
+      case 'member': default: return 'Welfare Member';
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '14px 14px 14px 42px',
+    borderRadius: '10px',
+    border: '1.5px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.07)',
+    color: '#fff',
+    fontSize: '1rem',
+    outline: 'none',
+    boxSizing: 'border-box',
+    WebkitAppearance: 'none',
+  };
+
+  const inputNoIconStyle: React.CSSProperties = {
+    ...inputStyle,
+    padding: '14px',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '0.78rem',
+    fontWeight: 600,
+    color: 'rgba(255,255,255,0.55)',
+    marginBottom: '6px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  };
+
+  const fieldStyle: React.CSSProperties = { marginBottom: '14px' };
+
+  const iconStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: '14px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: 'rgba(255,255,255,0.35)',
+    pointerEvents: 'none',
+  };
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'linear-gradient(160deg, #0d1b2a 0%, #07121c 40%, #001a0e 100%)',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
+    }}>
+      {/* Top Decorative Band */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '220px',
+        background: 'radial-gradient(ellipse at 50% -20%, rgba(0,122,61,0.45) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{
+        position: 'relative',
+        flex: 1,
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: 'column',
         justifyContent: 'center',
-        padding: '16px',
-        background: 'radial-gradient(ellipse at 50% 25%, rgba(37, 99, 235, 0.15) 0%, rgba(9, 13, 22, 0.98) 75%)',
-        position: 'relative'
-      }}
-    >
-      <div
-        className="card"
-        style={{
-          width: '100%',
-          maxWidth: '440px',
-          padding: '32px clamp(18px, 5vw, 30px)',
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle)',
-          borderRadius: '16px',
-          position: 'relative'
-        }}
-      >
-        {/* Brand Header */}
-        <div style={{ textAlign: 'center', marginBottom: '26px' }}>
-          <div
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '14px',
-              background: 'linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              boxShadow: '0 8px 24px rgba(59, 130, 246, 0.35)',
-              marginBottom: '12px'
-            }}
-          >
-            <Shield size={28} />
+        padding: '40px 24px 32px',
+        maxWidth: '480px',
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}>
+
+        {/* ── Brand Header ── */}
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '18px',
+            background: 'linear-gradient(135deg, #007a3d 0%, #005c2e 100%)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            boxShadow: '0 12px 36px rgba(0,122,61,0.45)',
+            marginBottom: '16px',
+          }}>
+            <Shield size={30} />
           </div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+          <h1 style={{
+            fontSize: '1.5rem',
+            fontWeight: 800,
+            margin: '0 0 6px 0',
+            color: '#fff',
+            letterSpacing: '-0.02em',
+          }}>
             {settings.orgName}
-          </h2>
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', margin: 0 }}>
+          </h1>
+          <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
             {activeView === 'join'
-              ? 'Join as a Member of Solian Welfare'
+              ? 'Create your member account'
               : activeView === 'activate'
-              ? 'Activate Your Invited Account'
+              ? 'Activate your invited account'
               : activeView === 'forgot'
-              ? 'Recover Account Access'
-              : 'Sign in with your phone number and password'}
+              ? 'Recover account access'
+              : 'Sign in to your welfare portal'}
           </p>
         </div>
 
-        {/* Live Role Identification Notification */}
+        {/* ── Identity Verified Banner ── */}
         {identifiedUser && (
-          <div
-            style={{
-              padding: '14px 16px',
-              borderRadius: '10px',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              color: '#34d399',
-              fontSize: '0.82rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-              marginBottom: '18px',
-              animation: 'fadeIn 0.2s ease'
-            }}
-          >
+          <div style={{
+            padding: '14px 16px',
+            borderRadius: '12px',
+            background: 'rgba(16,185,129,0.15)',
+            border: '1px solid rgba(16,185,129,0.35)',
+            color: '#34d399',
+            fontSize: '0.85rem',
+            marginBottom: '20px',
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
               <CheckCircle2 size={18} />
-              <span>Identity Verified: {identifiedUser.name}</span>
+              <span>Welcome, {identifiedUser.name}</span>
             </div>
-            <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
-              Assigned Role: <strong>{getRoleDisplayName(identifiedUser.role)}</strong>
-            </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Accessing your authorized portal...
+            <div style={{ fontSize: '0.75rem', opacity: 0.85, marginTop: '3px' }}>
+              Role: {getRoleDisplayName(identifiedUser.role)} — Redirecting...
             </div>
           </div>
         )}
 
-        {/* Success Alerts */}
-        {joinSuccess && (
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              color: '#34d399',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '18px'
-            }}
-          >
+        {/* ── Success Alerts ── */}
+        {(joinSuccess || activationSuccess || recoverySuccess) && (
+          <div style={{
+            padding: '13px 16px',
+            borderRadius: '12px',
+            background: 'rgba(16,185,129,0.15)',
+            border: '1px solid rgba(16,185,129,0.3)',
+            color: '#34d399',
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            marginBottom: '20px',
+          }}>
             <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
-            <span>{joinSuccess}</span>
+            <span>{joinSuccess || activationSuccess || recoverySuccess}</span>
           </div>
         )}
 
-        {activationSuccess && (
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
-              color: '#34d399',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '18px'
-            }}
-          >
-            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
-            <span>{activationSuccess}</span>
-          </div>
-        )}
-
-        {recoverySuccess && (
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: '8px',
-              background: 'rgba(59, 130, 246, 0.15)',
-              border: '1px solid rgba(59, 130, 246, 0.35)',
-              color: '#60a5fa',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '18px'
-            }}
-          >
-            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
-            <span>{recoverySuccess}</span>
-          </div>
-        )}
-
-        {/* Error Notification */}
+        {/* ── Error Alert ── */}
         {errorMsg && (
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: '8px',
-              background: 'rgba(239, 68, 68, 0.12)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              color: '#f87171',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '18px'
-            }}
-          >
+          <div style={{
+            padding: '13px 16px',
+            borderRadius: '12px',
+            background: 'rgba(239,68,68,0.12)',
+            border: '1px solid rgba(239,68,68,0.3)',
+            color: '#f87171',
+            fontSize: '0.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            marginBottom: '20px',
+          }}>
             <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* VIEW 1: SIGN IN (CLEAN & SIMPLE) */}
+        {/* ══════════════════════════════════
+            VIEW 1: SIGN IN
+        ══════════════════════════════════ */}
         {activeView === 'login' && (
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '16px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: 'var(--text-secondary)',
-                  marginBottom: '6px'
-                }}
-              >
-                Phone Number (or Member Number)
-              </label>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Phone Number</label>
               <div style={{ position: 'relative' }}>
-                <Phone
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--text-muted)'
-                  }}
-                />
+                <Phone size={17} style={iconStyle} />
                 <input
-                  type="text"
-                  placeholder="Enter phone number (e.g. 0799589508)"
+                  type="tel"
+                  placeholder="e.g. 0799589508"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 12px 12px 38px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-elevated)',
-                    color: 'var(--text-main)',
-                    fontSize: '0.9rem'
-                  }}
+                  style={inputStyle}
                   required
-                  autoFocus
+                  autoComplete="tel"
+                  inputMode="tel"
                 />
               </div>
             </div>
 
             <div style={{ marginBottom: '22px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  Password
-                </label>
+                <label style={labelStyle}>Password</label>
                 <button
                   type="button"
                   onClick={() => { setActiveView('forgot'); setErrorMsg(null); }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--primary)',
-                    fontSize: '0.75rem',
-                    cursor: 'pointer',
-                    padding: 0
-                  }}
+                  style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
                 >
                   Forgot password?
                 </button>
               </div>
               <div style={{ position: 'relative' }}>
-                <Lock
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--text-muted)'
-                  }}
-                />
+                <Lock size={17} style={iconStyle} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 38px 12px 38px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-elevated)',
-                    color: 'var(--text-main)',
-                    fontSize: '0.9rem'
-                  }}
+                  style={{ ...inputStyle, paddingRight: '44px' }}
                   required
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-muted)',
-                    cursor: 'pointer',
-                    padding: 0
-                  }}
+                  style={{ position: 'absolute', right: '13px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 0 }}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
             </div>
@@ -478,297 +377,207 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
             <button
               type="submit"
               disabled={isLoading || identifiedUser !== null}
-              className="btn btn-primary"
               style={{
                 width: '100%',
-                padding: '13px',
-                fontSize: '0.92rem',
+                padding: '15px',
+                borderRadius: '12px',
+                border: 'none',
+                background: isLoading || identifiedUser ? 'rgba(0,122,61,0.5)' : 'linear-gradient(135deg, #007a3d 0%, #005c2e 100%)',
+                color: '#fff',
+                fontSize: '1rem',
                 fontWeight: 700,
+                cursor: isLoading || identifiedUser ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                borderRadius: '8px'
+                boxShadow: '0 8px 24px rgba(0,122,61,0.4)',
+                transition: 'all 0.2s',
               }}
             >
-              {isLoading ? (
-                'Identifying Account...'
-              ) : identifiedUser ? (
-                'Role Verified! Accessing...'
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight size={16} />
-                </>
+              {isLoading ? 'Signing In...' : identifiedUser ? '✓ Verified!' : (
+                <><span>Sign In</span><ArrowRight size={18} /></>
               )}
             </button>
 
-            {/* Navigation to Join / Activate */}
-            <div style={{ marginTop: '22px', textAlign: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* Bottom links */}
+            <div style={{ marginTop: '28px', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '22px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button
                 type="button"
                 onClick={() => { setActiveView('join'); setErrorMsg(null); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-secondary)',
-                  fontSize: '0.8rem',
-                  cursor: 'pointer'
-                }}
+                style={{ background: 'none', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: '10px', color: '#fff', fontSize: '0.88rem', cursor: 'pointer', padding: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
               >
-                New member? <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Join Solian Welfare</span>
+                <UserPlus size={16} />
+                New member? <strong>Join Solian Welfare</strong>
               </button>
-
               <button
                 type="button"
                 onClick={() => { setActiveView('activate'); setErrorMsg(null); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.74rem',
-                  cursor: 'pointer'
-                }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', cursor: 'pointer' }}
               >
-                Have an invitation token? <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Activate Account</span>
+                Have an invitation token? <span style={{ color: '#4ade80' }}>Activate Account</span>
               </button>
             </div>
           </form>
         )}
 
-        {/* VIEW 2: JOIN NORMALLY (MEMBER SELF-REGISTRATION) */}
+        {/* ══════════════════════════════════
+            VIEW 2: JOIN (SELF-REGISTRATION)
+        ══════════════════════════════════ */}
         {activeView === 'join' && (
           <form onSubmit={handleJoin}>
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Full Name
-              </label>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Full Name</label>
               <div style={{ position: 'relative' }}>
-                <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="e.g. Samuel Kipchumba"
-                  value={joinName}
-                  onChange={(e) => setJoinName(e.target.value)}
-                  style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                  required
-                />
+                <User size={17} style={iconStyle} />
+                <input type="text" placeholder="e.g. Samuel Kipchumba" value={joinName}
+                  onChange={(e) => setJoinName(e.target.value)} style={inputStyle} required />
               </div>
             </div>
 
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Phone Number
-              </label>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Phone Number</label>
               <div style={{ position: 'relative' }}>
-                <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="e.g. 0712345678"
-                  value={joinPhone}
-                  onChange={(e) => setJoinPhone(e.target.value)}
-                  style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                  required
-                />
+                <Phone size={17} style={iconStyle} />
+                <input type="tel" placeholder="e.g. 0712345678" value={joinPhone}
+                  onChange={(e) => setJoinPhone(e.target.value)} style={inputStyle} required inputMode="tel" />
               </div>
             </div>
 
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                National ID Number (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. 32456789"
-                value={joinNationalId}
-                onChange={(e) => setJoinNationalId(e.target.value)}
-                style={{ width: '100%', padding: '11px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-              />
+            <div style={fieldStyle}>
+              <label style={labelStyle}>National ID <span style={{ opacity: 0.5, fontWeight: 400 }}>(optional)</span></label>
+              <input type="text" placeholder="e.g. 32456789" value={joinNationalId}
+                onChange={(e) => setJoinNationalId(e.target.value)} style={inputNoIconStyle} />
             </div>
 
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Create Password
-              </label>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Create Password</label>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="password"
-                  placeholder="At least 6 characters"
-                  value={joinPassword}
-                  onChange={(e) => setJoinPassword(e.target.value)}
-                  style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                  required
-                />
+                <Lock size={17} style={iconStyle} />
+                <input type="password" placeholder="At least 6 characters" value={joinPassword}
+                  onChange={(e) => setJoinPassword(e.target.value)} style={inputStyle} required />
               </div>
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Confirm Password
-              </label>
+            <div style={{ marginBottom: '22px' }}>
+              <label style={labelStyle}>Confirm Password</label>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="password"
-                  placeholder="Re-type password"
-                  value={joinConfirmPassword}
-                  onChange={(e) => setJoinConfirmPassword(e.target.value)}
-                  style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                  required
-                />
+                <Lock size={17} style={iconStyle} />
+                <input type="password" placeholder="Re-type password" value={joinConfirmPassword}
+                  onChange={(e) => setJoinConfirmPassword(e.target.value)} style={inputStyle} required />
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '12px', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '8px' }}
-            >
-              {isLoading ? 'Registering...' : 'Join Solian Welfare'}
-              <UserPlus size={16} />
+            <button type="submit" disabled={isLoading} style={{
+              width: '100%', padding: '15px', borderRadius: '12px', border: 'none',
+              background: 'linear-gradient(135deg, #007a3d 0%, #005c2e 100%)',
+              color: '#fff', fontSize: '1rem', fontWeight: 700, cursor: isLoading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              boxShadow: '0 8px 24px rgba(0,122,61,0.4)',
+            }}>
+              {isLoading ? 'Registering...' : <><UserPlus size={18} /><span>Join Solian Welfare</span></>}
             </button>
 
-            <div style={{ textAlign: 'center', marginTop: '16px' }}>
-              <button
-                type="button"
-                onClick={() => { setActiveView('login'); setErrorMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '0.8rem', cursor: 'pointer' }}
-              >
-                Already registered? <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Sign In</span>
+            <div style={{ textAlign: 'center', marginTop: '18px' }}>
+              <button type="button" onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', cursor: 'pointer' }}>
+                ← Back to Sign In
               </button>
             </div>
           </form>
         )}
 
-        {/* VIEW 3: ACTIVATE ACCOUNT WITH TOKEN */}
+        {/* ══════════════════════════════════
+            VIEW 3: ACTIVATE WITH TOKEN
+        ══════════════════════════════════ */}
         {activeView === 'activate' && (
           <form onSubmit={handleActivate}>
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Invitation Token
-              </label>
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Invitation Token</label>
               <div style={{ position: 'relative' }}>
-                <KeyRound size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Enter single-use invite token"
-                  value={activationToken}
-                  onChange={(e) => setActivationToken(e.target.value)}
-                  style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                  required
-                />
+                <KeyRound size={17} style={iconStyle} />
+                <input type="text" placeholder="Enter single-use invite token" value={activationToken}
+                  onChange={(e) => setActivationToken(e.target.value)} style={inputStyle} required />
               </div>
             </div>
 
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Your Full Name (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="Confirm your full name"
-                value={activationName}
-                onChange={(e) => setActivationName(e.target.value)}
-                style={{ width: '100%', padding: '11px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-              />
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Full Name <span style={{ opacity: 0.5, fontWeight: 400 }}>(optional)</span></label>
+              <input type="text" placeholder="Confirm your full name" value={activationName}
+                onChange={(e) => setActivationName(e.target.value)} style={inputNoIconStyle} />
             </div>
 
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Set Password (min 8 characters)
-              </label>
-              <input
-                type="password"
-                placeholder="Choose personal password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                style={{ width: '100%', padding: '11px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                required
-              />
+            <div style={fieldStyle}>
+              <label style={labelStyle}>Set Password <span style={{ opacity: 0.5, fontWeight: 400 }}>(min 8 chars)</span></label>
+              <input type="password" placeholder="Choose personal password" value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)} style={inputNoIconStyle} required />
             </div>
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                placeholder="Re-type password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                style={{ width: '100%', padding: '11px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                required
-              />
+            <div style={{ marginBottom: '22px' }}>
+              <label style={labelStyle}>Confirm Password</label>
+              <input type="password" placeholder="Re-type password" value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)} style={inputNoIconStyle} required />
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '12px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '8px' }}
-            >
-              {isLoading ? 'Activating...' : 'Activate & Set Password'}
-              <CheckCircle2 size={16} />
+            <button type="submit" disabled={isLoading} style={{
+              width: '100%', padding: '15px', borderRadius: '12px', border: 'none',
+              background: 'linear-gradient(135deg, #007a3d 0%, #005c2e 100%)',
+              color: '#fff', fontSize: '1rem', fontWeight: 700, cursor: isLoading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              boxShadow: '0 8px 24px rgba(0,122,61,0.4)',
+            }}>
+              {isLoading ? 'Activating...' : <><CheckCircle2 size={18} /><span>Activate &amp; Set Password</span></>}
             </button>
 
-            <div style={{ textAlign: 'center', marginTop: '14px' }}>
-              <button
-                type="button"
-                onClick={() => { setActiveView('login'); setErrorMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer' }}
-              >
+            <div style={{ textAlign: 'center', marginTop: '18px' }}>
+              <button type="button" onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', cursor: 'pointer' }}>
                 ← Back to Sign In
               </button>
             </div>
           </form>
         )}
 
-        {/* VIEW 4: FORGOT PASSWORD */}
+        {/* ══════════════════════════════════
+            VIEW 4: FORGOT PASSWORD
+        ══════════════════════════════════ */}
         {activeView === 'forgot' && (
           <form onSubmit={handleRecovery}>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '18px' }}>
-              Enter your registered phone number or email address to recover your password.
+            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: '20px' }}>
+              Enter your registered phone number or email to receive recovery instructions.
             </p>
             <div style={{ marginBottom: '22px' }}>
-              <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Phone Number or Email
-              </label>
+              <label style={labelStyle}>Phone Number or Email</label>
               <div style={{ position: 'relative' }}>
-                <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="e.g. 0799589508"
-                  value={recoveryId}
-                  onChange={(e) => setRecoveryId(e.target.value)}
-                  style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
-                  required
-                />
+                <Phone size={17} style={iconStyle} />
+                <input type="text" placeholder="e.g. 0799589508" value={recoveryId}
+                  onChange={(e) => setRecoveryId(e.target.value)} style={inputStyle} required />
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '12px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '8px' }}
-            >
-              {isLoading ? 'Processing...' : 'Send Recovery Instructions'}
-              <HelpCircle size={16} />
+            <button type="submit" disabled={isLoading} style={{
+              width: '100%', padding: '15px', borderRadius: '12px', border: 'none',
+              background: 'linear-gradient(135deg, #007a3d 0%, #005c2e 100%)',
+              color: '#fff', fontSize: '1rem', fontWeight: 700, cursor: isLoading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              boxShadow: '0 8px 24px rgba(0,122,61,0.4)',
+            }}>
+              {isLoading ? 'Processing...' : <><HelpCircle size={18} /><span>Send Recovery Instructions</span></>}
             </button>
 
-            <div style={{ textAlign: 'center', marginTop: '14px' }}>
-              <button
-                type="button"
-                onClick={() => { setActiveView('login'); setErrorMsg(null); }}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer' }}
-              >
+            <div style={{ textAlign: 'center', marginTop: '18px' }}>
+              <button type="button" onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', cursor: 'pointer' }}>
                 ← Back to Sign In
               </button>
             </div>
           </form>
         )}
+      </div>
+
+      {/* Footer */}
+      <div style={{ textAlign: 'center', padding: '16px 24px', color: 'rgba(255,255,255,0.2)', fontSize: '0.72rem' }}>
+        Solian Wolves Welfare Management System © 2024
       </div>
     </div>
   );
