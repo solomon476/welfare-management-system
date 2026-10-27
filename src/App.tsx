@@ -400,6 +400,7 @@ export const App: React.FC = () => {
         pendingRequestsCount={stats.pendingRequestsCount}
         pendingContributionsCount={StorageService.getContributions().filter(c => c.status === 'recorded').length}
         onOpenMobileMenu={() => setIsMobileNavOpen(true)}
+        onLogout={handleLogout}
       />
     </div>
   );

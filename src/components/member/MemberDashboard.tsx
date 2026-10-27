@@ -55,9 +55,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
           padding: '24px 28px',
           marginBottom: '26px',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
-          flexWrap: 'wrap',
+          flexDirection: 'column',
           gap: '16px',
           boxShadow: '0 4px 16px rgba(0, 122, 61, 0.2)'
         }}
@@ -80,12 +80,14 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-secondary" onClick={() => onNavigate('my_contributions')}>
+        <div style={{ display: 'flex', gap: '10px', width: '100%', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" onClick={() => onNavigate('my_contributions')}
+            style={{ flex: '1 1 140px', minWidth: 0, justifyContent: 'center' }}>
             <FileText size={15} />
             <span>View Statement</span>
           </button>
-          <button className="btn btn-primary" onClick={onOpenApply}>
+          <button className="btn btn-primary" onClick={onOpenApply}
+            style={{ flex: '1 1 160px', minWidth: 0, justifyContent: 'center' }}>
             <PlusCircle size={15} />
             <span>Apply for Assistance</span>
           </button>
