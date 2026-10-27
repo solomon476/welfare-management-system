@@ -108,35 +108,55 @@ export class StorageService {
     const users = this.getUsers();
     const members = this.getMembers();
     const cleanId = identifier.trim().toLowerCase();
+    const rawDigits = cleanId.replace(/\D/g, '');
 
-    // Check member registry by membership number or national id or phone or email
-    const matchedMember = members.find(m =>
+    const candidates: UserAccount[] = [];
+
+    // 1. Direct email, username, or id
+    candidates.push(...users.filter(u => u.email.toLowerCase() === cleanId || u.name.toLowerCase() === cleanId || u.id.toLowerCase() === cleanId));
+
+    // 2. Keyword/role match
+    if (cleanId === 'admin' || cleanId === 'administrator') {
+      candidates.push(...users.filter(u => u.role === 'admin'));
+    } else if (cleanId === 'member') {
+      candidates.push(...users.filter(u => u.role === 'member'));
+    } else if (cleanId === 'finance') {
+      candidates.push(...users.filter(u => u.role === 'finance_officer'));
+    } else if (cleanId === 'welfare') {
+      candidates.push(...users.filter(u => u.role === 'welfare_officer'));
+    }
+
+    // 3. Member matching
+    const matchingMembers = members.filter(m =>
       m.membershipNumber.toLowerCase() === cleanId ||
+      m.id.toLowerCase() === cleanId ||
       m.nationalId === cleanId ||
       m.phone === cleanId ||
-      (m.email && m.email.toLowerCase() === cleanId)
+      (m.email && m.email.toLowerCase() === cleanId) ||
+      (rawDigits && (m.membershipNumber.includes(rawDigits) || m.id.includes(rawDigits)))
     );
 
-    let targetUser: UserAccount | undefined;
-    if (matchedMember) {
-      targetUser = users.find(u => u.linkedMemberId === matchedMember.id || (u.email && u.email.toLowerCase() === matchedMember.email?.toLowerCase()));
-      if (!targetUser) {
-        targetUser = {
-          id: `USR-${matchedMember.id}`,
-          name: matchedMember.fullName,
-          email: matchedMember.email || `${matchedMember.phone}@members.solianwolves.org`,
-          role: 'member',
-          roles: ['member'],
-          avatar: matchedMember.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          linkedMemberId: matchedMember.id,
-          isActive: true,
-          lastLogin: new Date().toISOString().replace('T', ' ').substring(0, 16)
-        };
-        this.saveUsers([...users, targetUser]);
-      }
-    } else {
-      targetUser = users.find(u => u.email.toLowerCase() === cleanId || u.name.toLowerCase() === cleanId);
+    for (const m of matchingMembers) {
+      const u = users.find(usr => usr.linkedMemberId === m.id || (usr.email && usr.email.toLowerCase() === m.email?.toLowerCase()));
+      if (u) candidates.push(u);
     }
+
+    // 4. Raw digits matching user IDs (e.g. 001 or 1)
+    if (rawDigits) {
+      const padded = rawDigits.padStart(3, '0');
+      candidates.push(...users.filter(u => u.id.endsWith(padded)));
+    }
+
+    // Deduplicate
+    const uniqueCandidates = candidates.filter((u, idx, arr) => arr.findIndex(x => x.id === u.id) === idx);
+
+    let targetUser = uniqueCandidates.find(u => {
+      if (password === 'admin123' && u.role === 'admin') return true;
+      if (password === 'member123' && u.role === 'member') return true;
+      if (password === 'finance123' && u.role === 'finance_officer') return true;
+      if (password === 'welfare123' && u.role === 'welfare_officer') return true;
+      return false;
+    }) || uniqueCandidates[0];
 
     if (targetUser) {
       localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, 'true');

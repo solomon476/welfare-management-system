@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
+  Eye,
+  EyeOff,
   Sparkles,
   Smartphone
 } from 'lucide-react';
@@ -20,10 +22,12 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }) => {
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState('001');
+  const [password, setPassword] = useState('admin123');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [identifiedUser, setIdentifiedUser] = useState<UserAccount | null>(null);
   const [activeView, setActiveView] = useState<'login' | 'activate' | 'forgot'>('login');
 
   // Account Activation State
@@ -36,16 +40,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
   // Password Recovery State
   const [recoveryId, setRecoveryId] = useState('');
   const [recoverySuccess, setRecoverySuccess] = useState<string | null>(null);
-  const [showDirectory, setShowDirectory] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim()) {
-      setErrorMsg('Please enter your Membership Number or registered Email.');
+      setErrorMsg('Please enter your Number or Email.');
       return;
     }
     if (!password) {
-      setErrorMsg('Please enter your account password.');
+      setErrorMsg('Please enter your password.');
       return;
     }
 
@@ -56,22 +59,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
     setIsLoading(false);
 
     if (result.success && result.user) {
-      onLoginSuccess(result.user);
+      // Visually display identified role before transitioning
+      setIdentifiedUser(result.user);
+      setTimeout(() => {
+        onLoginSuccess(result.user!);
+      }, 750);
     } else {
-      setErrorMsg(result.message || 'Invalid credentials. Please verify your details.');
+      setErrorMsg(result.message || 'Invalid number or password. Please verify your credentials.');
     }
   };
 
-  const handleQuickLogin = async (demoId: string, demoPass: string) => {
-    setIdentifier(demoId);
-    setPassword(demoPass);
-    setIsLoading(true);
+  const handleSelectAccount = (id: string, pass: string) => {
+    setIdentifier(id);
+    setPassword(pass);
     setErrorMsg(null);
-    const result = await StorageService.loginWithCredentials(demoId, demoPass);
-    setIsLoading(false);
-    if (result.success && result.user) {
-      onLoginSuccess(result.user);
-    }
   };
 
   const handleActivate = async (e: React.FormEvent) => {
@@ -99,7 +100,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
       setTimeout(() => {
         setActiveView('login');
         setActivationSuccess(null);
-      }, 3000);
+      }, 2500);
     } else {
       setErrorMsg(result.message);
     }
@@ -108,7 +109,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
   const handleRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!recoveryId.trim()) {
-      setErrorMsg('Please enter your Membership Number or Email.');
+      setErrorMsg('Please enter your Member Number or Email.');
       return;
     }
     setIsLoading(true);
@@ -121,10 +122,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
       });
       const data = await resp.json().catch(() => ({}));
       setIsLoading(false);
-      setRecoverySuccess(data.message || 'If an account exists, recovery instructions have been dispatched.');
+      setRecoverySuccess(data.message || 'If this account exists, recovery instructions have been prepared.');
     } catch {
       setIsLoading(false);
-      setRecoverySuccess('Recovery instructions have been prepared for this account.');
+      setRecoverySuccess('Recovery instructions prepared for this account.');
+    }
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrator (Executive Access)';
+      case 'finance_officer':
+        return 'Finance Officer (Treasury & Verification)';
+      case 'welfare_officer':
+        return 'Welfare Officer (Applications Review)';
+      case 'welfare_approver':
+        return 'Welfare Approver (Trustee Approvals)';
+      case 'auditor':
+        return 'Auditor (Read-Only Financial Logs)';
+      case 'member':
+      default:
+        return 'Welfare Member (Member Portal)';
     }
   };
 
@@ -136,7 +155,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        background: 'radial-gradient(ellipse at 50% 20%, rgba(59, 130, 246, 0.12) 0%, rgba(9, 13, 22, 0.98) 70%)',
+        background: 'radial-gradient(ellipse at 50% 25%, rgba(37, 99, 235, 0.15) 0%, rgba(9, 13, 22, 0.98) 75%)',
         position: 'relative'
       }}
     >
@@ -146,13 +165,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
           width: '100%',
           maxWidth: '460px',
           padding: '36px 32px',
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-subtle)',
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle)',
           borderRadius: '16px',
-          position: 'relative',
-          overflow: 'hidden'
+          position: 'relative'
         }}
       >
-        {/* Top Header */}
+        {/* Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
@@ -165,89 +183,118 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
               justifyContent: 'center',
               color: '#fff',
               boxShadow: '0 8px 24px rgba(59, 130, 246, 0.35)',
-              marginBottom: '14px'
+              marginBottom: '12px'
             }}
           >
             <Shield size={28} />
           </div>
-          <h2 style={{ fontSize: '1.45rem', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
             {settings.orgName}
           </h2>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', margin: '4px 0 10px 0', padding: '3px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', fontSize: '0.72rem', fontWeight: 600 }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399' }} />
-            Production Access Gateway · SSL Encrypted
-          </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
-            Role-Based Access Control · Persistent Session Portal
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+            Sign in with your assigned number & password
           </p>
         </div>
 
-        {/* View Switcher Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            background: 'var(--bg-elevated)',
-            padding: '4px',
-            borderRadius: '10px',
-            marginBottom: '24px',
-            border: '1px solid var(--border-subtle)'
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+        {/* Quick Select Buttons for Client Testing */}
+        <div style={{ marginBottom: '20px' }}>
+          <div
             style={{
-              flex: 1,
-              padding: '8px 12px',
-              border: 'none',
-              borderRadius: '7px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: activeView === 'login' ? 'var(--primary)' : 'transparent',
-              color: activeView === 'login' ? '#fff' : 'var(--text-secondary)',
-              transition: 'all 0.15s ease'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '8px'
             }}
           >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveView('activate'); setErrorMsg(null); }}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              border: 'none',
-              borderRadius: '7px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: activeView === 'activate' ? 'var(--primary)' : 'transparent',
-              color: activeView === 'activate' ? '#fff' : 'var(--text-secondary)',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Activate Invite
-          </button>
-          <button
-            type="button"
-            onClick={() => { setActiveView('forgot'); setErrorMsg(null); }}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              border: 'none',
-              borderRadius: '7px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: activeView === 'forgot' ? 'var(--primary)' : 'transparent',
-              color: activeView === 'forgot' ? '#fff' : 'var(--text-secondary)',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Recovery
-          </button>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Quick Fill Demo Logins:
+            </span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Click to fill</span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={() => handleSelectAccount('001', 'admin123')}
+              style={{
+                padding: '8px 6px',
+                borderRadius: '8px',
+                border: identifier === '001' && password === 'admin123' ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
+                background: identifier === '001' && password === 'admin123' ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-elevated)',
+                cursor: 'pointer',
+                textAlign: 'center',
+                color: 'var(--text-main)'
+              }}
+            >
+              <div style={{ fontSize: '0.74rem', fontWeight: 700 }}>🛡️ Admin</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>No: 001</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectAccount('001', 'member123')}
+              style={{
+                padding: '8px 6px',
+                borderRadius: '8px',
+                border: identifier === '001' && password === 'member123' ? '1px solid #10b981' : '1px solid var(--border-subtle)',
+                background: identifier === '001' && password === 'member123' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-elevated)',
+                cursor: 'pointer',
+                textAlign: 'center',
+                color: 'var(--text-main)'
+              }}
+            >
+              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#34d399' }}>👤 Member</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>No: 001</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectAccount('003', 'finance123')}
+              style={{
+                padding: '8px 6px',
+                borderRadius: '8px',
+                border: identifier === '003' ? '1px solid #f59e0b' : '1px solid var(--border-subtle)',
+                background: identifier === '003' ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-elevated)',
+                cursor: 'pointer',
+                textAlign: 'center',
+                color: 'var(--text-main)'
+              }}
+            >
+              <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#fbbf24' }}>💰 Finance</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>No: 003</div>
+            </button>
+          </div>
         </div>
+
+        {/* Success Identification Alert */}
+        {identifiedUser && (
+          <div
+            style={{
+              padding: '14px 16px',
+              borderRadius: '10px',
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              color: '#34d399',
+              fontSize: '0.82rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              marginBottom: '18px',
+              animation: 'fadeIn 0.2s ease'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+              <CheckCircle2 size={18} />
+              <span>Identity Verified: {identifiedUser.name}</span>
+            </div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
+              Role: <strong>{getRoleDisplayName(identifiedUser.role)}</strong>
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+              Redirecting to authorized dashboard...
+            </div>
+          </div>
+        )}
 
         {/* Error Notification */}
         {errorMsg && (
@@ -262,7 +309,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
               display: 'flex',
               alignItems: 'center',
               gap: '10px',
-              marginBottom: '20px'
+              marginBottom: '18px'
             }}
           >
             <AlertCircle size={18} style={{ flexShrink: 0 }} />
@@ -270,61 +317,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
           </div>
         )}
 
-        {/* Success Notifications */}
-        {activationSuccess && (
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              color: '#34d399',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '20px'
-            }}
-          >
-            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
-            <span>{activationSuccess}</span>
-          </div>
-        )}
-
-        {recoverySuccess && (
-          <div
-            style={{
-              padding: '12px 14px',
-              borderRadius: '8px',
-              background: 'rgba(16, 185, 129, 0.12)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
-              color: '#34d399',
-              fontSize: '0.82rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '20px'
-            }}
-          >
-            <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
-            <span>{recoverySuccess}</span>
-          </div>
-        )}
-
         {/* VIEW 1: SIGN IN */}
         {activeView === 'login' && (
           <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '18px' }}>
+            <div style={{ marginBottom: '16px' }}>
               <label
                 style={{
                   display: 'block',
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                   fontWeight: 600,
                   color: 'var(--text-secondary)',
                   marginBottom: '6px'
                 }}
               >
-                Membership Number or Email
+                Member / Staff Number (or Email)
               </label>
               <div style={{ position: 'relative' }}>
                 <User
@@ -339,19 +345,18 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                 />
                 <input
                   type="text"
-                  placeholder="e.g. SW-M001 or member@solianwolves.org"
+                  placeholder="e.g. 001, SW-M001, or admin"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '11px 12px 11px 38px',
+                    padding: '12px 12px 12px 38px',
                     borderRadius: '8px',
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-elevated)',
                     color: 'var(--text-main)',
-                    fontSize: '0.85rem'
+                    fontSize: '0.88rem'
                   }}
-                  autoFocus
                   required
                 />
               </div>
@@ -359,7 +364,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
             <div style={{ marginBottom: '22px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
                   Password
                 </label>
                 <button
@@ -368,8 +373,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                   style={{
                     background: 'none',
                     border: 'none',
-                    fontSize: '0.74rem',
                     color: 'var(--primary)',
+                    fontSize: '0.75rem',
                     cursor: 'pointer',
                     padding: 0
                   }}
@@ -389,33 +394,50 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                   }}
                 />
                 <input
-                  type="password"
-                  placeholder="••••••••"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '11px 12px 11px 38px',
+                    padding: '12px 38px 12px 38px',
                     borderRadius: '8px',
                     border: '1px solid var(--border-color)',
                     background: 'var(--bg-elevated)',
                     color: 'var(--text-main)',
-                    fontSize: '0.85rem'
+                    fontSize: '0.88rem'
                   }}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: 0
+                  }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || identifiedUser !== null}
               className="btn btn-primary"
               style={{
                 width: '100%',
-                padding: '12px',
-                fontSize: '0.9rem',
-                fontWeight: 600,
+                padding: '13px',
+                fontSize: '0.92rem',
+                fontWeight: 700,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -423,8 +445,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
                 borderRadius: '8px'
               }}
             >
-              {isLoading ? 'Authenticating...' : 'Sign In to Portal'}
-              <ArrowRight size={16} />
+              {isLoading ? (
+                'Verifying Credentials...'
+              ) : identifiedUser ? (
+                'Access Granted! Opening...'
+              ) : (
+                <>
+                  <span>Sign In & Identify Role</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
           </form>
         )}
@@ -451,7 +481,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
             <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Your Full Name (Optional confirmation)
+                Your Full Name (Optional)
               </label>
               <input
                 type="text"
@@ -464,7 +494,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
 
             <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Create Strong Password (min 8 characters)
+                Set Password (min 8 characters)
               </label>
               <input
                 type="password"
@@ -499,6 +529,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
               {isLoading ? 'Activating...' : 'Activate & Set Password'}
               <CheckCircle2 size={16} />
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: '14px' }}>
+              <button
+                type="button"
+                onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer' }}
+              >
+                ← Back to Sign In
+              </button>
+            </div>
           </form>
         )}
 
@@ -506,17 +546,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
         {activeView === 'forgot' && (
           <form onSubmit={handleRecovery}>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '18px' }}>
-              Enter your registered Membership Number or Email address. The system will dispatch secure password recovery instructions.
+              Enter your Member Number or registered Email address to recover your password.
             </p>
             <div style={{ marginBottom: '22px' }}>
               <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Membership Number or Email
+                Member Number or Email
               </label>
               <div style={{ position: 'relative' }}>
                 <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   type="text"
-                  placeholder="e.g. SW-M001 or member@solianwolves.org"
+                  placeholder="e.g. 001, SW-M001, or email"
                   value={recoveryId}
                   onChange={(e) => setRecoveryId(e.target.value)}
                   style={{ width: '100%', padding: '11px 12px 11px 38px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', color: 'var(--text-main)', fontSize: '0.85rem' }}
@@ -531,230 +571,40 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
               className="btn btn-primary"
               style={{ width: '100%', padding: '12px', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '8px' }}
             >
-              {isLoading ? 'Processing...' : 'Request Recovery Instructions'}
+              {isLoading ? 'Processing...' : 'Send Recovery Instructions'}
               <HelpCircle size={16} />
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: '14px' }}>
+              <button
+                type="button"
+                onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer' }}
+              >
+                ← Back to Sign In
+              </button>
+            </div>
           </form>
         )}
 
-        {/* PRODUCTION MODE: Log-based & Role-based Access Banner & Directory */}
-        {!settings.isDemoMode ? (
-          <div
-            style={{
-              marginTop: '24px',
-              paddingTop: '18px',
-              borderTop: '1px solid var(--border-subtle)'
-            }}
-          >
-            <div
+        {/* Bottom Helper Link for Invitations */}
+        {activeView === 'login' && (
+          <div style={{ marginTop: '20px', textAlign: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
+            <button
+              type="button"
+              onClick={() => { setActiveView('activate'); setErrorMsg(null); }}
               style={{
-                padding: '12px 14px',
-                borderRadius: '8px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid var(--border-subtle)',
-                marginBottom: '12px'
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                fontSize: '0.75rem',
+                cursor: 'pointer'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <Lock size={14} style={{ color: 'var(--primary)' }} />
-                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                  Production Mode · Log-Based Access Control
-                </span>
-              </div>
-              <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.45 }}>
-                Authentication is strictly verified against the database. All login events, failed attempts, and administrative actions are logged in the immutable audit trail.
-              </p>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <button
-                type="button"
-                onClick={() => setShowDirectory(!showDirectory)}
-                className="btn btn-ghost btn-sm"
-                style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}
-              >
-                {showDirectory ? 'Hide Registered Directory' : 'View Registered Accounts Reference'}
-              </button>
-            </div>
-
-            {showDirectory && (
-              <div
-                style={{
-                  marginTop: '10px',
-                  padding: '12px',
-                  background: 'var(--bg-elevated)',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: '0.72rem'
-                }}
-              >
-                <div style={{ fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                  Select an account identifier to pre-fill login:
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                  <button
-                    type="button"
-                    onClick={() => { setIdentifier('SW-M001'); setPassword(''); }}
-                    className="btn btn-ghost btn-sm"
-                    style={{ fontSize: '0.7rem', justifyContent: 'flex-start', padding: '6px 8px', border: '1px solid var(--border-subtle)' }}
-                  >
-                    👤 Member (SW-M001)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setIdentifier('admin@solianwolves.org'); setPassword(''); }}
-                    className="btn btn-ghost btn-sm"
-                    style={{ fontSize: '0.7rem', justifyContent: 'flex-start', padding: '6px 8px', border: '1px solid var(--border-subtle)' }}
-                  >
-                    🛡️ Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setIdentifier('finance@solianwolves.org'); setPassword(''); }}
-                    className="btn btn-ghost btn-sm"
-                    style={{ fontSize: '0.7rem', justifyContent: 'flex-start', padding: '6px 8px', border: '1px solid var(--border-subtle)' }}
-                  >
-                    💰 Finance Officer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setIdentifier('welfare@solianwolves.org'); setPassword(''); }}
-                    className="btn btn-ghost btn-sm"
-                    style={{ fontSize: '0.7rem', justifyContent: 'flex-start', padding: '6px 8px', border: '1px solid var(--border-subtle)' }}
-                  >
-                    📋 Welfare Officer
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          /* DEMO COMMITTEE FAST LOGIN SWITCHER (ONLY IN DEMO MODE) */
-          <div
-            style={{
-              marginTop: '28px',
-              paddingTop: '20px',
-              borderTop: '1px solid var(--border-subtle)'
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '10px'
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  color: 'var(--text-muted)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <Sparkles size={11} color="#f59e0b" />
-                Demo 1-Click Role Testing
-              </span>
-              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Auto-fill credentials</span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('SW-M001', 'member123')}
-                className="btn btn-ghost btn-sm"
-                style={{
-                  fontSize: '0.72rem',
-                  justifyContent: 'flex-start',
-                  padding: '6px 10px',
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '6px',
-                  textAlign: 'left'
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>👤 Member</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginLeft: 'auto' }}>SW-M001</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@solianwolves.org', 'admin123')}
-                className="btn btn-ghost btn-sm"
-                style={{
-                  fontSize: '0.72rem',
-                  justifyContent: 'flex-start',
-                  padding: '6px 10px',
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '6px',
-                  textAlign: 'left'
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>🛡️ Admin</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginLeft: 'auto' }}>Sarah</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('finance@solianwolves.org', 'finance123')}
-                className="btn btn-ghost btn-sm"
-                style={{
-                  fontSize: '0.72rem',
-                  justifyContent: 'flex-start',
-                  padding: '6px 10px',
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '6px',
-                  textAlign: 'left'
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>💰 Finance</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginLeft: 'auto' }}>Grace</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('welfare@solianwolves.org', 'welfare123')}
-                className="btn btn-ghost btn-sm"
-                style={{
-                  fontSize: '0.72rem',
-                  justifyContent: 'flex-start',
-                  padding: '6px 10px',
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '6px',
-                  textAlign: 'left'
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>📋 Welfare</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginLeft: 'auto' }}>David</span>
-              </button>
-            </div>
+              Received an invitation token? <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Activate Account</span>
+            </button>
           </div>
         )}
-
-        {/* PWA Install Notice */}
-        <div
-          style={{
-            marginTop: '20px',
-            textAlign: 'center',
-            fontSize: '0.72rem',
-            color: 'var(--text-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px'
-          }}
-        >
-          <Smartphone size={13} />
-          <span>Installable PWA • Works offline & on mobile home screen</span>
-        </div>
       </div>
     </div>
   );

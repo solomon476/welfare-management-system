@@ -246,10 +246,22 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onLogout}
             className="btn btn-ghost btn-sm"
-            title="Sign out of your session"
-            style={{ padding: '6px', borderRadius: 'var(--radius-full)', color: 'var(--text-muted)' }}
+            title="Sign out of current account"
+            style={{
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-full)',
+              color: '#ef4444',
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              fontSize: '0.76rem',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
+            <span>Sign Out</span>
           </button>
         )}
       </div>

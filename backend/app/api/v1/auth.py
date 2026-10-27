@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import secrets
@@ -56,34 +57,69 @@ def login(data: LoginRequest, response: Response, request: Request, db: Session 
             detail="Member number or email address is required"
         )
 
+    login_id = data.login_id.strip()
+    clean_id = login_id.lower()
+    raw_digits = ''.join(c for c in login_id if c.isdigit())
+    candidates = []
+
     # 1. Direct Email Lookup
-    user = db.query(User).filter(User.email == login_id.lower()).first()
+    candidates.extend(db.query(User).filter(func.lower(User.email) == clean_id).all())
 
-    # 2. Member Number / National ID / Phone / Member ID Lookup
+    # 2. Exact User ID or Member ID
+    candidates.extend(db.query(User).filter(func.lower(User.id) == clean_id).all())
+    candidates.extend(db.query(User).filter(func.lower(User.linked_member_id) == clean_id).all())
+
+    # 3. Role/keyword shortcuts
+    if clean_id in ["admin", "administrator"]:
+        candidates.extend(db.query(User).filter(User.role == "admin").all())
+    elif clean_id in ["member"]:
+        candidates.extend(db.query(User).filter(User.role == "member").all())
+    elif clean_id in ["finance", "treasurer"]:
+        candidates.extend(db.query(User).filter(User.role == "finance_officer").all())
+    elif clean_id in ["welfare"]:
+        candidates.extend(db.query(User).filter(User.role == "welfare_officer").all())
+    elif clean_id in ["approver"]:
+        candidates.extend(db.query(User).filter(User.role == "welfare_approver").all())
+    elif clean_id in ["auditor"]:
+        candidates.extend(db.query(User).filter(User.role == "auditor").all())
+
+    # 4. Member registry lookups
+    matching_members = db.query(Member).filter(
+        (func.lower(Member.id) == clean_id) |
+        (func.lower(Member.membership_number) == clean_id) |
+        (Member.national_id == clean_id) |
+        (Member.phone == clean_id)
+    ).all()
+
+    # 5. Numeric digits matching (e.g. "001" or "1")
+    if raw_digits:
+        padded = raw_digits.zfill(3)
+        candidates.extend(db.query(User).filter(User.id.ilike(f"%{padded}")).all())
+        matching_members.extend(db.query(Member).filter(
+            (Member.membership_number.ilike(f"%{padded}%")) |
+            (Member.id.ilike(f"%{padded}%"))
+        ).all())
+
+    for m in matching_members:
+        if m.email:
+            candidates.extend(db.query(User).filter(func.lower(User.email) == m.email.lower()).all())
+        candidates.extend(db.query(User).filter(User.linked_member_id == m.id).all())
+
+    # Deduplicate candidates while preserving order
+    unique_candidates = []
+    seen = set()
+    for u in candidates:
+        if u.id not in seen:
+            seen.add(u.id)
+            unique_candidates.append(u)
+
+    user = None
+    for u in unique_candidates:
+        if verify_password(data.password, u.hashed_password):
+            user = u
+            break
+
     if not user:
-        member = db.query(Member).filter(
-            (Member.id == login_id) |
-            (Member.membership_number == login_id) |
-            (Member.national_id == login_id) |
-            (Member.phone == login_id)
-        ).first()
-        if member:
-            # 1. Match User whose email matches the member's registered email
-            if member.email:
-                user = db.query(User).filter(User.email == member.email.strip().lower()).first()
-            # 2. Match User with primary member role linked to this member
-            if not user:
-                user = db.query(User).filter(
-                    User.linked_member_id == member.id,
-                    User.role == "member"
-                ).first()
-            # 3. Fallback: any user linked to this member
-            if not user:
-                user = db.query(User).filter(User.linked_member_id == member.id).first()
-        if not user:
-            user = db.query(User).filter(User.linked_member_id == login_id).first()
-
-    if not user or not verify_password(data.password, user.hashed_password):
         log_action(
             db,
             user_id=user.id if user else "UNKNOWN",
