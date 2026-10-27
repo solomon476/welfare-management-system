@@ -48,6 +48,33 @@ export const App: React.FC = () => {
     return isOfficer ? 'dashboard' : 'member_dashboard';
   });
 
+  // ── Browser History: push state on tab change so back button works within app ──
+  const navigateToTab = (tab: string, portal?: 'admin' | 'member') => {
+    const p = portal ?? activePortal;
+    window.history.pushState({ tab, portal: p }, '', `#${tab}`);
+    setCurrentTab(tab);
+    if (portal) setActivePortal(portal);
+  };
+
+  // Seed the initial history entry so first back doesn't exit
+  useEffect(() => {
+    const initialTab = isOfficer ? 'dashboard' : 'member_dashboard';
+    const initialPortal = isOfficer ? 'admin' : 'member';
+    window.history.replaceState({ tab: initialTab, portal: initialPortal }, '', `#${initialTab}`);
+  }, []);
+
+  // Listen for hardware/browser back button
+  useEffect(() => {
+    const onPopState = (e: PopStateEvent) => {
+      if (e.state && e.state.tab) {
+        setCurrentTab(e.state.tab);
+        setActivePortal(e.state.portal ?? activePortal);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [activePortal]);
+
   // Restore session from FastAPI backend on mount if token is stored
   useEffect(() => {
     const token = StorageService.getAuthToken();
@@ -108,12 +135,8 @@ export const App: React.FC = () => {
 
   // Adjust active tab when switching portal
   const handleSwitchPortal = (portal: 'admin' | 'member') => {
-    setActivePortal(portal);
-    if (portal === 'admin') {
-      setCurrentTab('dashboard');
-    } else {
-      setCurrentTab('member_dashboard');
-    }
+    const tab = portal === 'admin' ? 'dashboard' : 'member_dashboard';
+    navigateToTab(tab, portal);
   };
 
   const handleSelectUser = (user: UserAccount) => {
@@ -176,7 +199,7 @@ export const App: React.FC = () => {
       <Sidebar
         activePortal={activePortal}
         currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
+        setCurrentTab={(tab) => navigateToTab(tab)}
         userRole={currentUser.role}
         pendingRequestsCount={stats.pendingRequestsCount}
         pendingContributionsCount={StorageService.getContributions().filter(c => c.status === 'recorded').length}
@@ -373,7 +396,7 @@ export const App: React.FC = () => {
       <MobileBottomNav
         activePortal={activePortal}
         currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
+        setCurrentTab={(tab) => navigateToTab(tab)}
         pendingRequestsCount={stats.pendingRequestsCount}
         pendingContributionsCount={StorageService.getContributions().filter(c => c.status === 'recorded').length}
         onOpenMobileMenu={() => setIsMobileNavOpen(true)}

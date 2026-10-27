@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Shield,
   Lock,
   Phone,
   ArrowRight,
+  ArrowLeft,
   KeyRound,
   CheckCircle2,
   AlertCircle,
@@ -29,6 +30,35 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [identifiedUser, setIdentifiedUser] = useState<UserAccount | null>(null);
   const [activeView, setActiveView] = useState<'login' | 'join' | 'activate' | 'forgot'>('login');
+
+  // Push history entries for sub-views so hardware back button works
+  const goToView = (view: 'login' | 'join' | 'activate' | 'forgot') => {
+    if (view === 'login') {
+      window.history.back(); // pop back to login entry
+    } else {
+      window.history.pushState({ loginView: view }, '', `#login-${view}`);
+      setActiveView(view);
+    }
+    setErrorMsg(null);
+  };
+
+  // Seed login history entry on mount
+  useEffect(() => {
+    window.history.replaceState({ loginView: 'login' }, '', '#login');
+  }, []);
+
+  // Handle hardware back on sub-views
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const view = e.state?.loginView;
+      if (view && ['login', 'join', 'activate', 'forgot'].includes(view)) {
+        setActiveView(view);
+        setErrorMsg(null);
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // Member Self-Registration ("Join Normally")
   const [joinName, setJoinName] = useState('');
@@ -212,6 +242,37 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
         pointerEvents: 'none',
       }} />
 
+      {/* Sub-view Back Header (shown on non-login views) */}
+      {activeView !== 'login' && (
+        <div style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '16px 20px 0',
+          zIndex: 1,
+        }}>
+          <button
+            onClick={() => goToView('login')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '10px',
+              color: '#fff',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '8px 14px',
+            }}
+          >
+            <ArrowLeft size={16} />
+            Back to Sign In
+          </button>
+        </div>
+      )}
+
       <div style={{
         position: 'relative',
         flex: 1,
@@ -226,13 +287,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
       }}>
 
         {/* ── Brand Header ── */}
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+        <div style={{ textAlign: 'center', marginBottom: activeView !== 'login' ? '24px' : '36px' }}>
           <div style={{
             width: '64px',
             height: '64px',
             borderRadius: '18px',
             background: 'linear-gradient(135deg, #007a3d 0%, #005c2e 100%)',
-            display: 'inline-flex',
+            display: activeView !== 'login' ? 'none' : 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#fff',
@@ -242,21 +303,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
             <Shield size={30} />
           </div>
           <h1 style={{
-            fontSize: '1.5rem',
+            fontSize: activeView !== 'login' ? '1.2rem' : '1.5rem',
             fontWeight: 800,
             margin: '0 0 6px 0',
             color: '#fff',
             letterSpacing: '-0.02em',
           }}>
-            {settings.orgName}
+            {activeView === 'join' ? 'Join Solian Welfare'
+              : activeView === 'activate' ? 'Activate Account'
+              : activeView === 'forgot' ? 'Recover Password'
+              : settings.orgName}
           </h1>
           <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', margin: 0 }}>
-            {activeView === 'join'
-              ? 'Create your member account'
-              : activeView === 'activate'
-              ? 'Activate your invited account'
-              : activeView === 'forgot'
-              ? 'Recover account access'
+            {activeView === 'join' ? 'Create your member account'
+              : activeView === 'activate' ? 'Enter your invitation token to activate'
+              : activeView === 'forgot' ? 'Enter your phone to receive recovery steps'
               : 'Sign in to your welfare portal'}
           </p>
         </div>
@@ -345,13 +406,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
             <div style={{ marginBottom: '22px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                 <label style={labelStyle}>Password</label>
-                <button
-                  type="button"
-                  onClick={() => { setActiveView('forgot'); setErrorMsg(null); }}
-                  style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
-                >
-                  Forgot password?
-                </button>
+          <button type="button"
+              onClick={() => goToView('forgot')}
+              style={{ background: 'none', border: 'none', color: '#4ade80', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}>
+              Forgot password?
+            </button>
               </div>
               <div style={{ position: 'relative' }}>
                 <Lock size={17} style={iconStyle} />
@@ -479,7 +538,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '18px' }}>
-              <button type="button" onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+              <button type="button" onClick={() => goToView('login')}
                 style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', cursor: 'pointer' }}>
                 ← Back to Sign In
               </button>
@@ -530,7 +589,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '18px' }}>
-              <button type="button" onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+              <button type="button" onClick={() => goToView('login')}
                 style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', cursor: 'pointer' }}>
                 ← Back to Sign In
               </button>
@@ -566,7 +625,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ settings, onLoginSuccess }
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '18px' }}>
-              <button type="button" onClick={() => { setActiveView('login'); setErrorMsg(null); }}
+              <button type="button" onClick={() => goToView('login')}
                 style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', cursor: 'pointer' }}>
                 ← Back to Sign In
               </button>
