@@ -4,7 +4,8 @@ from sqlalchemy import or_
 from typing import Optional
 
 from ...db.session import get_db
-from ...models.orm import Contribution
+from ...models.orm import Contribution, User
+from ...core.dependencies import get_current_user, require_roles
 from ...schemas.contribution import (
     ContributionCreate, ContributionVerify, ContributionReverse, ContributionResponse,
     BatchContributionImportRequest, BatchContributionImportResponse
@@ -24,11 +25,17 @@ def get_contributions(
     status: Optional[str] = None,
     category: Optional[str] = None,
     member_id: Optional[str] = None,
+    current_user: Optional[User] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(Contribution)
 
-    if member_id:
+    # Privacy control: Ordinary member accounts can only ever read their own personal contributions
+    if current_user and current_user.role == "member":
+        if not current_user.linked_member_id:
+            raise HTTPException(status_code=403, detail="No registered welfare member profile linked to this account.")
+        query = query.filter(Contribution.member_id == current_user.linked_member_id)
+    elif member_id:
         query = query.filter(Contribution.member_id == member_id)
 
     if search:
@@ -68,11 +75,20 @@ def get_contribution(contrib_id: str, db: Session = Depends(get_db)):
     return c
 
 @router.post("", response_model=ContributionResponse, status_code=201)
-def create_contribution(data: ContributionCreate, db: Session = Depends(get_db)):
-    return record_contribution(db, data)
+def create_contribution(
+    data: ContributionCreate,
+    current_user: Optional[User] = Depends(require_roles("finance_officer", "admin")),
+    db: Session = Depends(get_db)
+):
+    user_id = current_user.id if current_user else "USR-001"
+    return record_contribution(db, data, user_id=user_id)
 
 @router.post("/bulk-import", response_model=BatchContributionImportResponse, status_code=201)
-def import_bulk_contributions(data: BatchContributionImportRequest, db: Session = Depends(get_db)):
+def import_bulk_contributions(
+    data: BatchContributionImportRequest,
+    current_user: Optional[User] = Depends(require_roles("finance_officer", "admin")),
+    db: Session = Depends(get_db)
+):
     """
     High-volume Paybill / Bank statement batch importer for 50,000–100,000 members.
     Ingests up to 5,000 contribution transactions per batch with automated duplicate rejection.
@@ -80,9 +96,21 @@ def import_bulk_contributions(data: BatchContributionImportRequest, db: Session 
     return bulk_import_contributions(db, data)
 
 @router.post("/{contrib_id}/verify", response_model=ContributionResponse)
-def verify_payment(contrib_id: str, data: ContributionVerify, db: Session = Depends(get_db)):
-    return verify_contribution(db, contrib_id, data)
+def verify_payment(
+    contrib_id: str,
+    data: ContributionVerify,
+    current_user: Optional[User] = Depends(require_roles("finance_officer", "admin")),
+    db: Session = Depends(get_db)
+):
+    user_id = current_user.id if current_user else "USR-003"
+    return verify_contribution(db, contrib_id, data, user_id=user_id)
 
 @router.post("/{contrib_id}/reverse", response_model=ContributionResponse)
-def reverse_payment(contrib_id: str, data: ContributionReverse, db: Session = Depends(get_db)):
-    return reverse_contribution(db, contrib_id, data)
+def reverse_payment(
+    contrib_id: str,
+    data: ContributionReverse,
+    current_user: Optional[User] = Depends(require_roles("finance_officer", "admin")),
+    db: Session = Depends(get_db)
+):
+    user_id = current_user.id if current_user else "USR-003"
+    return reverse_contribution(db, contrib_id, data, user_id=user_id)

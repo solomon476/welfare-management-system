@@ -28,9 +28,9 @@ class WelfareRequestCreate(WelfareRequestBase):
 
 class WelfareStatusUpdate(BaseModel):
     status: str = Field(..., description="under_review, approved, rejected, documents_requested")
-    notes: str = Field(..., min_length=3)
-    officer_name: str
-    officer_role: str
+    notes: Optional[str] = "Status update recorded"
+    officer_name: Optional[str] = None
+    officer_role: Optional[str] = None
     amount_approved: Optional[Decimal] = Field(None, ge=Decimal("0.00"))
 
 class WelfareDisburse(BaseModel):

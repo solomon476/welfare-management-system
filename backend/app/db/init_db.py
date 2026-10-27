@@ -2,11 +2,24 @@ from sqlalchemy.orm import Session
 from datetime import date, datetime
 from decimal import Decimal
 
-from ..models.orm import User, Member, Contribution, WelfareRequest, WelfareDecision, FinancialLedgerEntry, OrganizationSettings, AuditLog
+from ..models.orm import User, Member, Contribution, WelfareRequest, WelfareDecision, FinancialLedgerEntry, OrganizationSettings, AuditLog, Role, UserRole
 from ..core.security import hash_password
 from ..core.config import settings
 
 def init_db(db: Session):
+    # 0. System Roles
+    if db.query(Role).count() == 0:
+        default_roles = [
+            Role(id="admin", name="Administrator", description="Full administrative authority, accounts, and association settings"),
+            Role(id="finance_officer", name="Finance Officer", description="Record and verify contributions; access financial ledger"),
+            Role(id="welfare_officer", name="Welfare Officer", description="Review welfare assistance applications and make recommendations"),
+            Role(id="welfare_approver", name="Welfare Approver", description="Approve or reject welfare assistance within assigned limits"),
+            Role(id="approver", name="Welfare Approver Alias", description="Backward-compatibility alias for approver role"),
+            Role(id="member", name="General Member", description="Access personal member portal, contributions, and welfare requests"),
+            Role(id="auditor", name="Auditor", description="Read-only assurance access to financial ledger and immutable audit trails")
+        ]
+        db.add_all(default_roles)
+        db.flush()
     # 1. Organization Settings
     existing_settings = db.query(OrganizationSettings).first()
     if not existing_settings:
@@ -41,6 +54,7 @@ def init_db(db: Session):
                 role="admin",
                 avatar="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
                 department="Executive Committee",
+                linked_member_id="SW-M003",
                 is_active=True
             ),
             User(
@@ -51,6 +65,7 @@ def init_db(db: Session):
                 role="welfare_officer",
                 avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
                 department="Welfare Directorate",
+                linked_member_id="SW-M002",
                 is_active=True
             ),
             User(
@@ -61,6 +76,7 @@ def init_db(db: Session):
                 role="finance_officer",
                 avatar="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
                 department="Treasury & Finance",
+                linked_member_id="SW-M001",
                 is_active=True
             ),
             User(
@@ -68,9 +84,10 @@ def init_db(db: Session):
                 name="Dr. Benson Otieno",
                 email="approver@solianwolves.org",
                 hashed_password=hash_password("approver123"),
-                role="approver",
+                role="welfare_approver",
                 avatar="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
                 department="Board of Trustees",
+                linked_member_id="SW-M003",
                 is_active=True
             ),
             User(
@@ -82,6 +99,17 @@ def init_db(db: Session):
                 avatar="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
                 linked_member_id="SW-M001",
                 department="General Assembly",
+                is_active=True
+            ),
+            User(
+                id="USR-006",
+                name="Robert Mutua",
+                email="auditor@solianwolves.org",
+                hashed_password=hash_password("auditor123"),
+                role="auditor",
+                avatar="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
+                department="External Audit & Assurance",
+                linked_member_id=None,
                 is_active=True
             )
         ]

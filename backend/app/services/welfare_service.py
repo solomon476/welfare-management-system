@@ -4,7 +4,7 @@ from decimal import Decimal
 from fastapi import HTTPException
 from typing import Optional
 
-from ..models.orm import WelfareRequest, WelfareDecision, Disbursement, FinancialLedgerEntry, Member, OrganizationSettings
+from ..models.orm import WelfareRequest, WelfareDecision, Disbursement, FinancialLedgerEntry, Member, OrganizationSettings, User
 from ..schemas.welfare import WelfareRequestCreate, WelfareStatusUpdate, WelfareDisburse
 from .audit_service import log_action
 from .treasury_service import assert_sufficient_funds
@@ -77,6 +77,32 @@ def update_welfare_status(
     req = db.query(WelfareRequest).filter(WelfareRequest.id == req_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Welfare request not found")
+
+    # Conflict of Interest Guard: An officer cannot approve their own welfare application
+    if data.status in ["approved", "disbursed"]:
+        officer_name_clean = (data.officer_name or "").strip().lower()
+        member_name_clean = (req.member_name or "").strip().lower()
+        if officer_name_clean and member_name_clean and officer_name_clean == member_name_clean:
+            raise HTTPException(
+                status_code=400,
+                detail="Conflict of Interest: An authorized officer cannot approve or sanction their own welfare claim."
+            )
+        
+        # Check by officer name if an account is linked to this member
+        if data.officer_name:
+            officer_user = db.query(User).filter(User.name == data.officer_name).first()
+            if officer_user and officer_user.linked_member_id == req.member_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Conflict of Interest: An authorized officer cannot approve or sanction their own welfare claim."
+                )
+        elif user_id and user_id != "SYS":
+            acting_user = db.query(User).filter(User.id == user_id).first()
+            if acting_user and acting_user.linked_member_id == req.member_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Conflict of Interest: An authorized officer cannot approve or sanction their own welfare claim."
+                )
 
     prev_status = req.status
     req.status = data.status

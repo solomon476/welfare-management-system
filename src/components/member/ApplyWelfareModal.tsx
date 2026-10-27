@@ -24,7 +24,7 @@ export const ApplyWelfareModal: React.FC<ApplyWelfareModalProps> = ({
   const [urgency, setUrgency] = useState<RequestUrgency>('urgent');
   const [amountRequested, setAmountRequested] = useState<number>(20000);
   const [description, setDescription] = useState('');
-  const [payoutDetails, setPayoutDetails] = useState(`M-Pesa ${member.phone} (${member.fullName})`);
+  const [payoutDetails, setPayoutDetails] = useState(`M-Pesa ${member?.phone || ''} (${member?.fullName || 'Member'})`);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([
     'Supporting_Medical_Bill_Estimate.pdf'
   ]);
@@ -59,9 +59,9 @@ export const ApplyWelfareModal: React.FC<ApplyWelfareModalProps> = ({
     }));
 
     StorageService.submitWelfareRequest({
-      memberId: member.id,
-      memberName: member.fullName,
-      membershipNumber: member.membershipNumber,
+      memberId: member?.id || 'SW-M001',
+      memberName: member?.fullName || 'Welfare Member',
+      membershipNumber: member?.membershipNumber || 'SW-MEMBER',
       category,
       urgency,
       amountRequested,

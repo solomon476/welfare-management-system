@@ -131,8 +131,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           </button>
 
           <button
-            className={`bottom-nav-item ${currentTab === 'rules' ? 'active' : ''}`}
-            onClick={() => setCurrentTab('rules')}
+            className={`bottom-nav-item ${currentTab === 'welfare_rules' ? 'active' : ''}`}
+            onClick={() => setCurrentTab('welfare_rules')}
             aria-label="Rules"
           >
             <div className="bottom-nav-icon-wrapper">
@@ -142,8 +142,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           </button>
 
           <button
-            className={`bottom-nav-item ${currentTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setCurrentTab('profile')}
+            className={`bottom-nav-item ${currentTab === 'member_profile' ? 'active' : ''}`}
+            onClick={() => setCurrentTab('member_profile')}
             aria-label="My Profile"
           >
             <div className="bottom-nav-icon-wrapper">

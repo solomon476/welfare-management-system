@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from ...db.session import get_db
-from ...models.orm import AuditLog
+from ...models.orm import AuditLog, User
+from ...core.dependencies import require_roles
 from ...schemas.audit import AuditLogResponse
 from ...schemas.common import PaginatedResponse
 
@@ -16,6 +17,7 @@ def get_audit_trail(
     action: Optional[str] = None,
     entity_type: Optional[str] = None,
     user_id: Optional[str] = None,
+    current_user: Optional[User] = Depends(require_roles("admin", "auditor")),
     db: Session = Depends(get_db)
 ):
     query = db.query(AuditLog)

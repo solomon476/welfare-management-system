@@ -9,10 +9,11 @@ interface MyContributionsProps {
 }
 
 export const MyContributions: React.FC<MyContributionsProps> = ({ member, settings }) => {
+  const safeMemberId = member?.id || '';
   const contributions = StorageService.getContributions()
-    .filter(c => c.memberId === member.id && c.status !== 'reversed');
+    .filter(c => c.memberId === safeMemberId && c.status !== 'reversed');
 
-  const balance = StorageService.calculateMemberBalance(member.id);
+  const balance = StorageService.calculateMemberBalance(safeMemberId);
 
   const handlePrint = () => {
     window.print();
@@ -34,7 +35,7 @@ export const MyContributions: React.FC<MyContributionsProps> = ({ member, settin
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Statement_${member.membershipNumber}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Statement_${member?.membershipNumber || 'Member'}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -47,8 +48,8 @@ export const MyContributions: React.FC<MyContributionsProps> = ({ member, settin
         <h1 style={{ fontSize: '1.4rem', fontWeight: 800 }}>{settings.orgName}</h1>
         <p style={{ fontSize: '0.82rem' }}>Registration: {settings.registrationNumber} · {settings.address}</p>
         <div style={{ marginTop: '12px', background: '#f5f5f5', padding: '10px', borderRadius: '4px' }}>
-          <div><strong>Member Name:</strong> {member.fullName}</div>
-          <div><strong>Membership No:</strong> {member.membershipNumber} | <strong>National ID:</strong> {member.nationalId}</div>
+          <div><strong>Member Name:</strong> {member?.fullName || 'Welfare Member'}</div>
+          <div><strong>Membership No:</strong> {member?.membershipNumber || 'SW-MEMBER'} | <strong>National ID:</strong> {member?.nationalId || 'N/A'}</div>
           <div><strong>Statement Date:</strong> {new Date().toLocaleDateString()}</div>
         </div>
       </div>

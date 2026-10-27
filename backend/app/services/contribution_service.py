@@ -92,6 +92,16 @@ def verify_contribution(
     if contrib.status == "verified":
         return contrib
 
+    # Maker-Checker Segregation of Duties: Officer recording payment cannot verify it
+    if data.verified_by and contrib.recorded_by:
+        rec_clean = contrib.recorded_by.split("(")[0].strip().lower()
+        ver_clean = data.verified_by.split("(")[0].strip().lower()
+        if rec_clean == ver_clean:
+            raise HTTPException(
+                status_code=400,
+                detail="Maker-Checker Segregation of Duties: The officer who recorded the payment cannot be the same person who verifies it."
+            )
+
     contrib.status = "verified"
     contrib.verified_by = data.verified_by
     contrib.verified_at = datetime.utcnow()

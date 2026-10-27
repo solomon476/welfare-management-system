@@ -6,7 +6,8 @@ from datetime import datetime
 from decimal import Decimal
 
 from ...db.session import get_db
-from ...models.orm import FinancialLedgerEntry
+from ...models.orm import FinancialLedgerEntry, User
+from ...core.dependencies import require_roles, require_admin_portal
 from ...schemas.treasury import (
     FinancialLedgerEntryCreate, FinancialLedgerEntryResponse,
     TreasuryReconciliationAuditResponse
@@ -18,7 +19,10 @@ from ...services.audit_service import log_action
 router = APIRouter(prefix="/treasury", tags=["Treasury & Financial Ledger"])
 
 @router.get("/reconciliation", response_model=TreasuryReconciliationAuditResponse)
-def get_treasury_reconciliation(db: Session = Depends(get_db)):
+def get_treasury_reconciliation(
+    current_user: Optional[User] = Depends(require_admin_portal()),
+    db: Session = Depends(get_db)
+):
     """
     Returns verified, reconciled treasury balance strictly calculated from posted ledger entries.
     Flags unexpected negative balances for executive audit review.
@@ -33,6 +37,7 @@ def get_ledger_entries(
     txn_type: Optional[str] = Query(None, alias="type"),
     category: Optional[str] = None,
     is_reconciled: Optional[bool] = None,
+    current_user: Optional[User] = Depends(require_admin_portal()),
     db: Session = Depends(get_db)
 ):
     query = db.query(FinancialLedgerEntry)
@@ -69,7 +74,11 @@ def get_ledger_entries(
     )
 
 @router.post("/ledger", response_model=FinancialLedgerEntryResponse, status_code=201)
-def record_manual_transaction(data: FinancialLedgerEntryCreate, db: Session = Depends(get_db)):
+def record_manual_transaction(
+    data: FinancialLedgerEntryCreate,
+    current_user: Optional[User] = Depends(require_roles("finance_officer", "admin")),
+    db: Session = Depends(get_db)
+):
     txn_id = f"TXN-MAN-{int(datetime.utcnow().timestamp() * 1000)}"
 
     entry = FinancialLedgerEntry(
@@ -88,11 +97,15 @@ def record_manual_transaction(data: FinancialLedgerEntryCreate, db: Session = De
     )
     db.add(entry)
 
+    user_id = current_user.id if current_user else "USR-003"
+    user_name = current_user.name if current_user else data.recorded_by
+    user_role = current_user.role if current_user else "finance_officer"
+
     log_action(
         db,
-        user_id="USR-003",
-        user_name=data.recorded_by,
-        user_role="finance_officer",
+        user_id=user_id,
+        user_name=user_name,
+        user_role=user_role,
         action="RECORD_MANUAL_TXN",
         entity_type="transaction",
         entity_id=txn_id,
@@ -104,7 +117,11 @@ def record_manual_transaction(data: FinancialLedgerEntryCreate, db: Session = De
     return entry
 
 @router.post("/ledger/{txn_id}/reconcile", response_model=FinancialLedgerEntryResponse)
-def reconcile_ledger_entry(txn_id: str, db: Session = Depends(get_db)):
+def reconcile_ledger_entry(
+    txn_id: str,
+    current_user: Optional[User] = Depends(require_roles("finance_officer", "admin")),
+    db: Session = Depends(get_db)
+):
     entry = db.query(FinancialLedgerEntry).filter(FinancialLedgerEntry.id == txn_id).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Transaction not found")
@@ -112,11 +129,15 @@ def reconcile_ledger_entry(txn_id: str, db: Session = Depends(get_db)):
     entry.is_reconciled = True
     entry.reconciled_at = datetime.utcnow()
 
+    user_id = current_user.id if current_user else "USR-003"
+    user_name = current_user.name if current_user else "Finance Officer"
+    user_role = current_user.role if current_user else "finance_officer"
+
     log_action(
         db,
-        user_id="USR-003",
-        user_name="Finance Officer",
-        user_role="finance_officer",
+        user_id=user_id,
+        user_name=user_name,
+        user_role=user_role,
         action="RECONCILE_TXN",
         entity_type="transaction",
         entity_id=txn_id,

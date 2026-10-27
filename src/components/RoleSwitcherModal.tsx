@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle2, Shield, User, DollarSign, HeartHandshake, UserCheck } from 'lucide-react';
+import { X, CheckCircle2, Shield, User, DollarSign, HeartHandshake, UserCheck, FileCheck } from 'lucide-react';
 import { UserAccount, UserRole } from '../types';
 
 interface RoleSwitcherModalProps {
@@ -44,6 +44,11 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       title: 'Welfare Member',
       desc: 'Member portal access: submits assistance applications, tracks request timeline, and views personal contribution statements.',
       icon: User
+    },
+    auditor: {
+      title: 'Assurance Auditor',
+      desc: 'Independent assurance: full read-only oversight across immutable audit logs, financial ledger, and bank reconciliation.',
+      icon: FileCheck
     }
   };
 

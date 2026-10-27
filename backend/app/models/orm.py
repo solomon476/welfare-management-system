@@ -23,6 +23,16 @@ class User(Base):
     last_login = Column(DateTime, nullable=True)
 
     member = relationship("Member", back_populates="user_account")
+    user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def roles_list(self) -> list:
+        roles = {self.role} if self.role else set()
+        if hasattr(self, "user_roles") and self.user_roles:
+            for ur in self.user_roles:
+                roles.add(ur.role_id)
+        return sorted(list(roles))
 
 class Member(Base):
     __tablename__ = "members"
@@ -216,3 +226,67 @@ class OrganizationSettings(Base):
     contact_phone = Column(String(50), default="+254 700 000 000", nullable=False)
     address = Column(Text, default="Nairobi, Kenya", nullable=False)
     is_demo_mode = Column(Boolean, default=True, nullable=False)
+
+class Role(Base):
+    __tablename__ = "roles"
+
+    id = Column(String(50), primary_key=True)  # admin, finance_officer, welfare_officer, approver, member, auditor
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+
+class UserRole(Base):
+    __tablename__ = "user_roles"
+
+    id = Column(String(50), primary_key=True)
+    user_id = Column(String(50), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    role_id = Column(String(50), ForeignKey("roles.id", ondelete="CASCADE"), index=True, nullable=False)
+    granted_by = Column(String(100), nullable=False)
+    granted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="user_roles")
+    role = relationship("Role")
+
+    __table_args__ = (
+        Index("idx_user_role_unique", "user_id", "role_id", unique=True),
+    )
+
+class AccountInvitation(Base):
+    __tablename__ = "account_invitations"
+
+    id = Column(String(50), primary_key=True, index=True)
+    token = Column(String(100), unique=True, index=True, nullable=False)
+    email = Column(String(150), index=True, nullable=False)
+    membership_number = Column(String(50), index=True, nullable=True)
+    member_name = Column(String(150), nullable=True)
+    role = Column(String(50), default="member", nullable=False)
+    created_by = Column(String(100), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+
+    id = Column(String(50), primary_key=True, index=True)
+    user_id = Column(String(50), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    session_token = Column(String(255), unique=True, index=True, nullable=False)
+    ip_address = Column(String(50), nullable=True)
+    user_agent = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    last_activity = Column(DateTime, default=datetime.utcnow, nullable=False)
+    is_revoked = Column(Boolean, default=False, nullable=False)
+
+    user = relationship("User", back_populates="sessions")
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String(50), primary_key=True, index=True)
+    user_id = Column(String(50), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    token = Column(String(100), unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+

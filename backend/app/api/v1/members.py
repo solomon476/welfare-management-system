@@ -6,7 +6,8 @@ from datetime import datetime
 from decimal import Decimal
 
 from ...db.session import get_db
-from ...models.orm import Member
+from ...models.orm import Member, User
+from ...core.dependencies import get_current_user, require_roles
 from ...schemas.member import MemberCreate, MemberUpdate, MemberResponse
 from ...schemas.common import PaginatedResponse
 from ...services.audit_service import log_action
@@ -21,9 +22,16 @@ def get_members(
     search: Optional[str] = None,
     status: Optional[str] = None,
     category: Optional[str] = None,
+    current_user: Optional[User] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(Member)
+
+    # Privacy control: Ordinary member accounts can only ever read their own profile
+    if current_user and current_user.role == "member":
+        if not current_user.linked_member_id:
+            raise HTTPException(status_code=403, detail="No registered welfare member profile linked to this account.")
+        query = query.filter(Member.id == current_user.linked_member_id)
 
     if cursor:
         query = query.filter(Member.id < cursor)
@@ -85,14 +93,30 @@ def check_duplicate(
     return {"is_duplicate": False}
 
 @router.get("/{member_id}", response_model=MemberResponse)
-def get_member(member_id: str, db: Session = Depends(get_db)):
+def get_member(
+    member_id: str,
+    current_user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     m = db.query(Member).filter(or_(Member.id == member_id, Member.membership_number == member_id)).first()
     if not m:
         raise HTTPException(status_code=404, detail="Member not found")
+
+    # Member privacy restriction
+    if current_user and current_user.role == "member":
+        if m.id != current_user.linked_member_id and m.membership_number != current_user.linked_member_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Ordinary members can only view their own membership profile."
+            )
     return m
 
 @router.post("", response_model=MemberResponse, status_code=201)
-def create_member(data: MemberCreate, db: Session = Depends(get_db)):
+def create_member(
+    data: MemberCreate,
+    current_user: Optional[User] = Depends(require_roles("welfare_officer", "admin")),
+    db: Session = Depends(get_db)
+):
     # Check duplicates
     dup = check_duplicate(data.national_id, data.phone, data.email or "", db)
     if dup.get("is_duplicate"):
@@ -126,11 +150,15 @@ def create_member(data: MemberCreate, db: Session = Depends(get_db)):
     )
     db.add(member)
 
+    user_id = current_user.id if current_user else "SYS"
+    user_name = current_user.name if current_user else "Welfare Officer"
+    user_role = current_user.role if current_user else "welfare_officer"
+
     log_action(
         db,
-        user_id="SYS",
-        user_name="Welfare Officer",
-        user_role="welfare_officer",
+        user_id=user_id,
+        user_name=user_name,
+        user_role=user_role,
         action="REGISTER_MEMBER",
         entity_type="member",
         entity_id=member_id,
@@ -142,7 +170,12 @@ def create_member(data: MemberCreate, db: Session = Depends(get_db)):
     return member
 
 @router.put("/{member_id}", response_model=MemberResponse)
-def update_member(member_id: str, data: MemberUpdate, db: Session = Depends(get_db)):
+def update_member(
+    member_id: str,
+    data: MemberUpdate,
+    current_user: Optional[User] = Depends(require_roles("welfare_officer", "admin")),
+    db: Session = Depends(get_db)
+):
     member = db.query(Member).filter(Member.id == member_id).first()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
@@ -162,11 +195,15 @@ def update_member(member_id: str, data: MemberUpdate, db: Session = Depends(get_
     if data.notes is not None:
         member.notes = data.notes
 
+    user_id = current_user.id if current_user else "SYS"
+    user_name = current_user.name if current_user else "Administrator"
+    user_role = current_user.role if current_user else "admin"
+
     log_action(
         db,
-        user_id="SYS",
-        user_name="Administrator",
-        user_role="admin",
+        user_id=user_id,
+        user_name=user_name,
+        user_role=user_role,
         action="UPDATE_MEMBER",
         entity_type="member",
         entity_id=member_id,

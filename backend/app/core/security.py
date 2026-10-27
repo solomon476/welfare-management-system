@@ -7,6 +7,26 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from .config import settings
 
+import secrets
+
+def generate_secure_token(nbytes: int = 32) -> str:
+    """Generates an unguessable cryptographic token suitable for invitations and password resets."""
+    return secrets.token_urlsafe(nbytes)
+
+def validate_password_strength(password: str) -> tuple[bool, str]:
+    """
+    Validates that password satisfies enterprise security criteria:
+    - At least 8 characters
+    - Contains letters and numbers
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long."
+    has_letter = any(c.isalpha() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    if not (has_letter and has_digit):
+        return False, "Password must contain both letters and digits."
+    return True, ""
+
 def hash_password(password: str) -> str:
     """Hash password using bcrypt"""
     salt = bcrypt.gensalt()

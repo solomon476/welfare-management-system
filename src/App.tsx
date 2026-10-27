@@ -26,13 +26,71 @@ import { ApplyWelfareModal } from './components/member/ApplyWelfareModal';
 import { MyRequests } from './components/member/MyRequests';
 import { MemberProfile } from './components/member/MemberProfile';
 import { WelfareRules } from './components/member/WelfareRules';
+import { LoginPage } from './components/auth/LoginPage';
 
 export const App: React.FC = () => {
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
-  const [currentUser, setCurrentUser] = useState<UserAccount>(StorageService.getCurrentUser());
-  const [settings, setSettings] = useState<OrganizationSettings>(StorageService.getSettings());
-  const [activePortal, setActivePortal] = useState<'admin' | 'member'>('admin');
-  const [currentTab, setCurrentTab] = useState<string>('dashboard');
+  const [currentUser, setCurrentUser] = useState<UserAccount>(() => StorageService.getCurrentUser());
+  const [settings, setSettings] = useState<OrganizationSettings>(() => StorageService.getSettings());
+  const [isAuth, setIsAuth] = useState<boolean>(() => {
+    // In production mode, require valid active authenticated session
+    return StorageService.isAuthenticated();
+  });
+
+  const isOfficer = ['admin', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
+    r => currentUser.role === r || (currentUser.roles && currentUser.roles.includes(r as any))
+  );
+
+  const [activePortal, setActivePortal] = useState<'admin' | 'member'>(() => {
+    return isOfficer ? 'admin' : 'member';
+  });
+  const [currentTab, setCurrentTab] = useState<string>(() => {
+    return isOfficer ? 'dashboard' : 'member_dashboard';
+  });
+
+  // Restore session from FastAPI backend on mount if token is stored
+  useEffect(() => {
+    const token = StorageService.getAuthToken();
+    if (token) {
+      fetch('/api/v1/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.ok ? res.json() : null)
+      .then(userData => {
+        if (userData) {
+          setCurrentUser(prev => ({
+            ...prev,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            roles: userData.roles || [userData.role],
+            linkedMemberId: userData.linked_member_id
+          }));
+        }
+      })
+      .catch(() => {});
+    }
+  }, []);
+
+  const handleLoginSuccess = (user: UserAccount) => {
+    setCurrentUser(user);
+    setIsAuth(true);
+    const officer = ['admin', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
+      r => user.role === r || (user.roles && user.roles.includes(r as any))
+    );
+    if (officer) {
+      setActivePortal('admin');
+      setCurrentTab('dashboard');
+    } else {
+      setActivePortal('member');
+      setCurrentTab('member_dashboard');
+    }
+  };
+
+  const handleLogout = async () => {
+    await StorageService.logout();
+    setIsAuth(false);
+  };
 
   // Modals & Drawers
   const [isRoleSwitcherOpen, setIsRoleSwitcherOpen] = useState(false);
@@ -102,13 +160,15 @@ export const App: React.FC = () => {
     refreshNotifications();
   };
 
-  // Find linked member or default to first member for Member Portal
-  const activeMember = (currentUser.linkedMemberId
-    ? StorageService.getMemberById(currentUser.linkedMemberId)
-    : StorageService.getMembers()[0]) || StorageService.getMembers()[0];
+  // Safe guaranteed member profile for Member Portal
+  const activeMember = StorageService.getActiveMemberForUser(currentUser);
 
   const stats = StorageService.getSystemStats();
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  if (!isAuth) {
+    return <LoginPage settings={settings} onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="app-container">
@@ -142,6 +202,7 @@ export const App: React.FC = () => {
           onInitializeCleanSlate={handleInitializeCleanSlate}
           isMobileNavOpen={isMobileNavOpen}
           setIsMobileNavOpen={setIsMobileNavOpen}
+          onLogout={handleLogout}
         />
 
         {/* Dynamic Route Content */}
@@ -211,6 +272,22 @@ export const App: React.FC = () => {
                 userRole={currentUser.role}
               />
             )}
+
+            {/* Fallback for unmatched admin tab */}
+            {!['dashboard', 'members', 'contributions', 'welfare', 'finance', 'reports', 'audit', 'settings'].includes(currentTab) && (
+              <AdminDashboard
+                onNavigate={setCurrentTab}
+                settings={settings}
+                onOpenRecordPayment={() => {
+                  setCurrentTab('contributions');
+                  setIsRecordPaymentOpen(true);
+                }}
+                onOpenNewMember={() => {
+                  setCurrentTab('members');
+                  setIsNewMemberOpen(true);
+                }}
+              />
+            )}
           </>
         ) : (
           <>
@@ -248,6 +325,16 @@ export const App: React.FC = () => {
             {currentTab === 'welfare_rules' && (
               <WelfareRules
                 settings={settings}
+              />
+            )}
+
+            {/* Fallback for unmatched member tab */}
+            {!['member_dashboard', 'my_contributions', 'my_requests', 'member_profile', 'welfare_rules'].includes(currentTab) && (
+              <MemberDashboard
+                member={activeMember}
+                settings={settings}
+                onNavigate={setCurrentTab}
+                onOpenApply={() => setIsApplyWelfareOpen(true)}
               />
             )}
           </>

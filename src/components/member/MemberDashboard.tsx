@@ -27,15 +27,22 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
   onNavigate,
   onOpenApply
 }) => {
-  const balance = StorageService.calculateMemberBalance(member.id);
+  const safeMemberId = member?.id || '';
+  const balance = StorageService.calculateMemberBalance(safeMemberId);
   const myContributions = StorageService.getContributions()
-    .filter(c => c.memberId === member.id && c.status !== 'reversed')
+    .filter(c => c.memberId === safeMemberId && c.status !== 'reversed')
     .slice(0, 4);
 
   const myRequests = StorageService.getWelfareRequests()
-    .filter(r => r.memberId === member.id);
+    .filter(r => r.memberId === safeMemberId);
 
   const activeRequest = myRequests.find(r => r.status !== 'disbursed' && r.status !== 'rejected');
+
+  const fullName = member?.fullName || 'Welfare Member';
+  const membershipNumber = member?.membershipNumber || 'SW-MEMBER';
+  const status = member?.status || 'active';
+  const category = (member?.category || 'full_member').replace('_', ' ').toUpperCase();
+  const dateJoined = member?.dateJoined || '2024';
 
   return (
     <div className="page-content">
@@ -58,18 +65,18 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span className="code-badge" style={{ background: '#c59b27', color: '#fff', border: '1px solid #ffd700', fontSize: '0.8rem', fontWeight: 800 }}>
-              {member.membershipNumber}
+              {membershipNumber}
             </span>
-            <span className={`status-pill pill-${member.status}`}>
+            <span className={`status-pill pill-${status}`}>
               <span className="status-dot" />
-              {member.status}
+              {status}
             </span>
           </div>
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '8px', color: '#fff' }}>
-            Welcome back, {member.fullName}
+            Welcome back, {fullName}
           </h2>
           <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            {member.category.replace('_', ' ').toUpperCase()} · Member since {member.dateJoined} · {settings.orgName}
+            {category} · Member since {dateJoined} · {settings.orgName}
           </p>
         </div>
 

@@ -4,7 +4,8 @@ from sqlalchemy import or_
 from typing import Optional
 
 from ...db.session import get_db
-from ...models.orm import WelfareRequest
+from ...models.orm import WelfareRequest, User
+from ...core.dependencies import get_current_user, require_roles
 from ...schemas.welfare import (
     WelfareRequestCreate, WelfareStatusUpdate, WelfareRequestResponse
 )
@@ -24,11 +25,17 @@ def get_welfare_requests(
     category: Optional[str] = None,
     urgency: Optional[str] = None,
     member_id: Optional[str] = None,
+    current_user: Optional[User] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(WelfareRequest)
 
-    if member_id:
+    # Privacy control: Ordinary member accounts can only ever read their own personal claims
+    if current_user and current_user.role == "member":
+        if not current_user.linked_member_id:
+            raise HTTPException(status_code=403, detail="No registered welfare member profile linked to this account.")
+        query = query.filter(WelfareRequest.member_id == current_user.linked_member_id)
+    elif member_id:
         query = query.filter(WelfareRequest.member_id == member_id)
 
     if search:
@@ -64,16 +71,59 @@ def get_welfare_requests(
     )
 
 @router.get("/{req_id}", response_model=WelfareRequestResponse)
-def get_welfare_request(req_id: str, db: Session = Depends(get_db)):
+def get_welfare_request(
+    req_id: str,
+    current_user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     req = db.query(WelfareRequest).filter(WelfareRequest.id == req_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Welfare request not found")
+
+    # Member privacy restriction
+    if current_user and current_user.role == "member":
+        if req.member_id != current_user.linked_member_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: You are not authorized to view another member's welfare application."
+            )
     return req
 
 @router.post("", response_model=WelfareRequestResponse, status_code=201)
-def submit_welfare_claim(data: WelfareRequestCreate, db: Session = Depends(get_db)):
-    return create_welfare_request(db, data, user_name="Member", user_id="USR-005")
+def submit_welfare_claim(
+    data: WelfareRequestCreate,
+    current_user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    user_id = current_user.id if current_user else "USR-005"
+    user_name = current_user.name if current_user else "Member"
+
+    # Enforce that members cannot submit claims on behalf of others
+    if current_user and current_user.role == "member":
+        if current_user.linked_member_id and data.member_id != current_user.linked_member_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You can only submit welfare applications for your own member profile."
+            )
+
+    return create_welfare_request(db, data, user_name=user_name, user_id=user_id)
 
 @router.post("/{req_id}/status", response_model=WelfareRequestResponse)
-def review_welfare_claim(req_id: str, data: WelfareStatusUpdate, db: Session = Depends(get_db)):
-    return update_welfare_status(db, req_id, data, user_id="SYS")
+def review_welfare_claim(
+    req_id: str,
+    data: WelfareStatusUpdate,
+    current_user: Optional[User] = Depends(require_roles("welfare_officer", "welfare_approver", "admin")),
+    db: Session = Depends(get_db)
+):
+    user_id = current_user.id if current_user else "SYS"
+    if current_user:
+        if not data.officer_name:
+            data.officer_name = current_user.name
+        if not data.officer_role:
+            data.officer_role = current_user.role
+    else:
+        if not data.officer_name:
+            data.officer_name = "Welfare Approver"
+        if not data.officer_role:
+            data.officer_role = "approver"
+    return update_welfare_status(db, req_id, data, user_id=user_id)

@@ -1,0 +1,18 @@
+{
+  "name": "Solian Wolves — Welfare Management System",
+  "short_name": "Solian Wolves",
+  "description": "Secure welfare administration, member portal, contributions tracking, and financial governance.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

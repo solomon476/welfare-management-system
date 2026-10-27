@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from .core.config import settings
 from .db.session import engine, Base, SessionLocal
 from .db.init_db import init_db
-from .api.v1 import auth, users, members, contributions, welfare, disbursements, treasury, reports, audit
+from .api.v1 import auth, users, members, contributions, welfare, disbursements, treasury, reports, audit, admin
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,6 +41,7 @@ app.add_middleware(
 api_prefix = settings.API_V1_STR
 app.include_router(auth.router, prefix=api_prefix)
 app.include_router(users.router, prefix=api_prefix)
+app.include_router(admin.router, prefix=api_prefix)
 app.include_router(members.router, prefix=api_prefix)
 app.include_router(contributions.router, prefix=api_prefix)
 app.include_router(welfare.router, prefix=api_prefix)

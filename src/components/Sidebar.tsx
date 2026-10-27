@@ -218,7 +218,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </nav>
 
-        {/* Footer Portal Switcher */}
+        {/* Footer Portal Switcher: Only officers can switch to Admin per PRD 4 */}
         <div className="sidebar-footer">
           <div className="portal-switch-card">
             <div className="portal-switch-label">Currently in</div>
@@ -226,16 +226,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <ShieldCheck size={16} color="var(--primary)" />
               <span>{activePortal === 'admin' ? 'Administrative Portal' : 'Member Portal'}</span>
             </div>
-            <button
-              onClick={() => {
-                setActivePortal(activePortal === 'admin' ? 'member' : 'admin');
-                if (onCloseMobileNav) onCloseMobileNav();
-              }}
-              className="portal-switch-btn"
-            >
-              <ArrowRightLeft size={14} />
-              <span>Switch to {activePortal === 'admin' ? 'Member' : 'Admin'}</span>
-            </button>
+            {userRole !== 'member' && (
+              <button
+                onClick={() => {
+                  setActivePortal(activePortal === 'admin' ? 'member' : 'admin');
+                  if (onCloseMobileNav) onCloseMobileNav();
+                }}
+                className="portal-switch-btn"
+              >
+                <ArrowRightLeft size={14} />
+                <span>Switch to {activePortal === 'admin' ? 'Member' : 'Admin'}</span>
+              </button>
+            )}
           </div>
         </div>
       </aside>

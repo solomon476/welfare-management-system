@@ -9,7 +9,8 @@ import {
   Menu,
   Database,
   Sparkles,
-  Users
+  Users,
+  LogOut
 } from 'lucide-react';
 import { UserAccount, OrganizationSettings } from '../types';
 
@@ -27,6 +28,7 @@ interface NavbarProps {
   onInitializeCleanSlate: () => void;
   isMobileNavOpen: boolean;
   setIsMobileNavOpen: (open: boolean) => void;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -42,8 +44,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onResetData,
   onInitializeCleanSlate,
   isMobileNavOpen,
-  setIsMobileNavOpen
+  setIsMobileNavOpen,
+  onLogout
 }) => {
+  const isOfficer = ['admin', 'finance_officer', 'welfare_officer', 'approver', 'welfare_approver', 'auditor'].some(
+    r => currentUser.role === r || (currentUser.roles && currentUser.roles.includes(r as any))
+  );
+
   return (
     <>
       <header className="app-header">
@@ -65,41 +72,61 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        {/* Desktop Portal Switcher Tabs */}
-        <div className="desktop-portal-tabs" style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', padding: '3px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)' }}>
-          <button
-            onClick={() => setActivePortal('admin')}
+        {/* Desktop Portal Switcher: Only visible to authorized Officers/Admins per PRD 4 */}
+        {isOfficer ? (
+          <div className="desktop-portal-tabs" style={{ display: 'flex', gap: '4px', background: 'var(--bg-elevated)', padding: '3px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-subtle)' }}>
+            <button
+              onClick={() => setActivePortal('admin')}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 'var(--radius-full)',
+                border: 'none',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: activePortal === 'admin' ? 'var(--primary)' : 'transparent',
+                color: activePortal === 'admin' ? '#ffffff' : 'var(--text-secondary)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Admin
+            </button>
+            <button
+              onClick={() => setActivePortal('member')}
+              style={{
+                padding: '5px 12px',
+                borderRadius: 'var(--radius-full)',
+                border: 'none',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: activePortal === 'member' ? 'var(--primary)' : 'transparent',
+                color: activePortal === 'member' ? '#ffffff' : 'var(--text-secondary)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Member
+            </button>
+          </div>
+        ) : (
+          <div
             style={{
-              padding: '5px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
               borderRadius: 'var(--radius-full)',
-              border: 'none',
+              background: 'rgba(59, 130, 246, 0.12)',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
               fontSize: '0.78rem',
               fontWeight: 600,
-              cursor: 'pointer',
-              background: activePortal === 'admin' ? 'var(--primary)' : 'transparent',
-              color: activePortal === 'admin' ? '#ffffff' : 'var(--text-secondary)',
-              transition: 'all 0.15s ease'
+              color: 'var(--primary)'
             }}
           >
-            Admin
-          </button>
-          <button
-            onClick={() => setActivePortal('member')}
-            style={{
-              padding: '5px 12px',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              background: activePortal === 'member' ? 'var(--primary)' : 'transparent',
-              color: activePortal === 'member' ? '#ffffff' : 'var(--text-secondary)',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            Member
-          </button>
-        </div>
+            <Users size={13} />
+            <span>Member Portal</span>
+          </div>
+        )}
       </div>
 
       <div className="header-right">
@@ -213,26 +240,40 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <ChevronDown size={14} style={{ color: 'var(--text-muted)', marginLeft: '2px' }} />
         </div>
+
+        {/* Sign Out Action Button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="btn btn-ghost btn-sm"
+            title="Sign out of your session"
+            style={{ padding: '6px', borderRadius: 'var(--radius-full)', color: 'var(--text-muted)' }}
+          >
+            <LogOut size={16} />
+          </button>
+        )}
       </div>
     </header>
 
-    {/* Phone View: Dedicated Segmented Portal Bar (Stable, zero sideways wobble) */}
-    <div className="mobile-portal-bar">
-      <button
-        className={`mobile-portal-btn ${activePortal === 'admin' ? 'active' : ''}`}
-        onClick={() => setActivePortal('admin')}
-      >
-        <Shield size={14} />
-        <span>Administrative Portal</span>
-      </button>
-      <button
-        className={`mobile-portal-btn ${activePortal === 'member' ? 'active' : ''}`}
-        onClick={() => setActivePortal('member')}
-      >
-        <Users size={14} />
-        <span>Member Portal</span>
-      </button>
-    </div>
+    {/* Phone View: Dedicated Segmented Portal Bar (Only visible to authorized Officers per PRD 4) */}
+    {isOfficer && (
+      <div className="mobile-portal-bar">
+        <button
+          className={`mobile-portal-btn ${activePortal === 'admin' ? 'active' : ''}`}
+          onClick={() => setActivePortal('admin')}
+        >
+          <Shield size={14} />
+          <span>Administrative Portal</span>
+        </button>
+        <button
+          className={`mobile-portal-btn ${activePortal === 'member' ? 'active' : ''}`}
+          onClick={() => setActivePortal('member')}
+        >
+          <Users size={14} />
+          <span>Member Portal</span>
+        </button>
+      </div>
+    )}
   </>
 );
 };

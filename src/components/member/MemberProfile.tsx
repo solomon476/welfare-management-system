@@ -24,9 +24,9 @@ export const MemberProfile: React.FC<MemberProfileProps> = ({ member, settings }
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Membership Identification</h3>
-            <span className={`status-pill pill-${member.status}`}>
+            <span className={`status-pill pill-${member?.status || 'active'}`}>
               <span className="status-dot" />
-              {member.status}
+              {member?.status || 'active'}
             </span>
           </div>
 
@@ -34,7 +34,7 @@ export const MemberProfile: React.FC<MemberProfileProps> = ({ member, settings }
             <div>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>Full Legal Name</span>
               <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)', marginTop: '2px' }}>
-                {member.fullName}
+                {member?.fullName || 'Welfare Member'}
               </div>
             </div>
 
@@ -42,23 +42,23 @@ export const MemberProfile: React.FC<MemberProfileProps> = ({ member, settings }
               <div>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>Membership Number</span>
                 <div style={{ marginTop: '2px' }}>
-                  <span className="code-badge">{member.membershipNumber}</span>
+                  <span className="code-badge">{member?.membershipNumber || 'SW-MEMBER'}</span>
                 </div>
               </div>
               <div>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>National ID Number</span>
-                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member.nationalId}</div>
+                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member?.nationalId || 'N/A'}</div>
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>Phone Contact</span>
-                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member.phone}</div>
+                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member?.phone || 'N/A'}</div>
               </div>
               <div>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>Email Address</span>
-                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member.email}</div>
+                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member?.email || 'N/A'}</div>
               </div>
             </div>
 
@@ -66,19 +66,19 @@ export const MemberProfile: React.FC<MemberProfileProps> = ({ member, settings }
               <div>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>Membership Tier</span>
                 <div style={{ fontWeight: 600, textTransform: 'capitalize', marginTop: '2px' }}>
-                  {member.category.replace('_', ' ')}
+                  {(member?.category || 'full_member').replace('_', ' ')}
                 </div>
               </div>
               <div>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>Date Registered</span>
-                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member.dateJoined}</div>
+                <div style={{ fontWeight: 600, marginTop: '2px' }}>{member?.dateJoined || '2024'}</div>
               </div>
             </div>
 
             <div>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem', textTransform: 'uppercase' }}>Monthly Commitment</span>
               <div style={{ fontWeight: 700, color: 'var(--primary)', marginTop: '2px' }}>
-                {settings.currency} {member.monthlyCommitment.toLocaleString()} / month
+                {settings.currency} {(member?.monthlyCommitment || settings.monthlyDuesAmount || 1500).toLocaleString()} / month
               </div>
             </div>
           </div>

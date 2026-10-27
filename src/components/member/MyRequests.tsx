@@ -10,8 +10,9 @@ interface MyRequestsProps {
 }
 
 export const MyRequests: React.FC<MyRequestsProps> = ({ member, settings, onOpenApply }) => {
+  const safeMemberId = member?.id || '';
   const [requests, setRequests] = useState<WelfareRequest[]>(
-    StorageService.getWelfareRequests().filter(r => r.memberId === member.id)
+    StorageService.getWelfareRequests().filter(r => r.memberId === safeMemberId)
   );
 
   const [selectedReq, setSelectedReq] = useState<WelfareRequest | null>(null);

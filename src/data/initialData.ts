@@ -25,7 +25,7 @@ export const initialOrgSettings: OrganizationSettings = {
   contactEmail: 'welfare@solianwolves.org',
   contactPhone: '+254 722 000 123',
   address: 'Solian Wolves Towers, 4th Floor, Ralph Bunche Rd, Nairobi, Kenya',
-  isDemoMode: true
+  isDemoMode: false
 };
 
 export const initialUserAccounts: UserAccount[] = [
@@ -79,6 +79,16 @@ export const initialUserAccounts: UserAccount[] = [
     department: 'General Membership',
     isActive: true,
     lastLogin: '2026-10-25 08:20'
+  },
+  {
+    id: 'USR-006',
+    name: 'Robert Mutua',
+    email: 'auditor@solianwolves.org',
+    role: 'auditor',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    department: 'External Audit & Assurance',
+    isActive: true,
+    lastLogin: '2026-10-25 15:40'
   }
 ];
 

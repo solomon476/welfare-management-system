@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'welfare_officer' | 'finance_officer' | 'approver' | 'member';
+export type UserRole = 'admin' | 'welfare_officer' | 'finance_officer' | 'approver' | 'member' | 'auditor';
 
 export type MemberStatus = 'active' | 'inactive' | 'suspended' | 'pending';
 
@@ -135,6 +135,7 @@ export interface UserAccount {
   name: string;
   email: string;
   role: UserRole;
+  roles?: UserRole[];
   avatar: string;
   linkedMemberId?: string;
   department?: string;

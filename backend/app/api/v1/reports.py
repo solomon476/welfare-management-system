@@ -4,14 +4,18 @@ from sqlalchemy import func
 from decimal import Decimal
 
 from ...db.session import get_db
-from ...models.orm import Member, Contribution, WelfareRequest, FinancialLedgerEntry, OrganizationSettings
+from ...models.orm import Member, Contribution, WelfareRequest, FinancialLedgerEntry, OrganizationSettings, User
+from ...core.dependencies import get_current_user, require_admin_portal
 from ...schemas.reports import MemberStatementResponse, MemberStatementItem, SystemSummaryStats
 from ...services.treasury_service import get_reconciliation
 
 router = APIRouter(prefix="/reports", tags=["Reports & Statements"])
 
 @router.get("/summary", response_model=SystemSummaryStats)
-def get_system_summary(db: Session = Depends(get_db)):
+def get_system_summary(
+    current_user: Optional[User] = Depends(require_admin_portal()),
+    db: Session = Depends(get_db)
+):
     reconciliation = get_reconciliation(db)
 
     total_members = db.query(Member).count()
@@ -51,10 +55,22 @@ def get_system_summary(db: Session = Depends(get_db)):
     )
 
 @router.get("/member-statement/{member_id}", response_model=MemberStatementResponse)
-def get_member_statement(member_id: str, db: Session = Depends(get_db)):
+def get_member_statement(
+    member_id: str,
+    current_user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     member = db.query(Member).filter(Member.id == member_id).first()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
+
+    # Member privacy restriction: cannot read another member's statement
+    if current_user and current_user.role == "member":
+        if member_id != current_user.linked_member_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: You are not authorized to view another member's confidential financial statement."
+            )
 
     contributions = db.query(Contribution).filter(Contribution.member_id == member_id).all()
     welfare_claims = db.query(WelfareRequest).filter(WelfareRequest.member_id == member_id).all()

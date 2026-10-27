@@ -179,12 +179,13 @@ export const MemberManagement: React.FC<MemberManagementProps> = ({
   };
 
   const filteredMembers = members.filter(m => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      m.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      m.membershipNumber.toLowerCase().includes(search.toLowerCase()) ||
-      m.nationalId.includes(search) ||
-      m.phone.includes(search) ||
-      m.email.toLowerCase().includes(search.toLowerCase());
+      (m.fullName || '').toLowerCase().includes(q) ||
+      (m.membershipNumber || '').toLowerCase().includes(q) ||
+      (m.nationalId || '').includes(search) ||
+      (m.phone || '').includes(search) ||
+      (m.email || '').toLowerCase().includes(q);
 
     const matchesStatus = statusFilter === 'all' || m.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || m.category === categoryFilter;
